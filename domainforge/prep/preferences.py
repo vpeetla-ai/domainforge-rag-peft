@@ -10,6 +10,7 @@ from typing import Any
 from domainforge.prep.chatml import SYSTEM_PROMPT, build_assistant_target
 from domainforge.prep.chunk_sop import chunk_all_sops, load_sop_map
 from domainforge.prep.intent_actions import intent_to_action
+from domainforge.eval.alignment import chosen_beats_rejected
 from domainforge.rag.intent_router import intent_to_category
 from domainforge.rag.naive import RetrievedChunk, format_context_blocks
 from domainforge.schemas.triage import Priority, TriageResponse
@@ -156,36 +157,33 @@ def generate_preferences_from_golden(
         chosen = parse_chosen_prediction(row, sop_map)
         allowed = row.get("allowed_cite_ids", [])
         context_blocks = context_blocks_for_cites(allowed, chunk_index)
-        reason = reject_reasons[idx % len(reject_reasons)]
-        rejected = make_rejected(chosen, reason, sop_map)
-        pairs.append(
-            preference_pair_record(
-                instruction=row["instruction"],
-                gold_intent=row["gold_intent"],
-                chosen=chosen,
-                rejected=rejected,
-                reject_reason=reason,
-                context_blocks=context_blocks,
-                allowed_cite_ids=allowed,
-            )
-        )
-        if idx % 2 == 0 and len(reject_reasons) > 1:
-            alt_reason = reject_reasons[(idx + 2) % len(reject_reasons)]
-            if alt_reason != reason:
-                alt_rejected = make_rejected(chosen, alt_reason, sop_map)
-                pairs.append(
-                    preference_pair_record(
-                        instruction=row["instruction"],
-                        gold_intent=row["gold_intent"],
-                        chosen=chosen,
-                        rejected=alt_rejected,
-                        reject_reason=alt_reason,
-                        context_blocks=context_blocks,
-                        allowed_cite_ids=allowed,
-                    )
-                )
-        rng.shuffle(pairs[-2:] if len(pairs) >= 2 else pairs)
+        chosen_json = json.dumps(chosen, separators=(",", ":"), sort_keys=True)
 
+        for reason in reject_reasons:
+            rejected = make_rejected(chosen, reason, sop_map)
+            rejected_json = json.dumps(rejected, separators=(",", ":"), sort_keys=True)
+            if rejected_json == chosen_json:
+                continue
+            if not chosen_beats_rejected(
+                json.dumps(chosen, separators=(",", ":")),
+                json.dumps(rejected, separators=(",", ":")),
+                row["gold_intent"],
+                allowed,
+            ):
+                continue
+            pairs.append(
+                preference_pair_record(
+                    instruction=row["instruction"],
+                    gold_intent=row["gold_intent"],
+                    chosen=chosen,
+                    rejected=rejected,
+                    reject_reason=reason,
+                    context_blocks=context_blocks,
+                    allowed_cite_ids=allowed,
+                )
+            )
+
+    rng.shuffle(pairs)
     return pairs
 
 

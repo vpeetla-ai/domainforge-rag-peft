@@ -6,22 +6,26 @@ import json
 
 from domainforge.eval.scorers.format_adherence import parse_triage_output
 from domainforge.eval.scorers.hallucination import hallucination_frequency
+from domainforge.prep.intent_actions import intent_to_action
 
 
 def alignment_score(prediction: str, gold_intent: str, allowed_cite_ids: list[str]) -> float:
-    """Composite 0–1 score: format + intent + citation faithfulness."""
+    """Composite 0–1 score: format + intent + action + citation faithfulness."""
     if not prediction:
         return 0.0
     points = 0.0
+    max_points = 4.0
     parsed, _ = parse_triage_output(prediction)
     if parsed is not None:
         points += 1.0
         if parsed.intent == gold_intent:
             points += 1.0
+            if parsed.suggested_action == intent_to_action(gold_intent):
+                points += 1.0
     halluc_pct = hallucination_frequency([prediction], [allowed_cite_ids])
     if halluc_pct == 0.0:
         points += 1.0
-    return points / 3.0
+    return points / max_points
 
 
 def preference_win_rate(

@@ -23,7 +23,7 @@ flowchart LR
   Bitext[Bitext SFT] --> PEFT[QLoRA adapter]
   RAG --> API[FastAPI /v1/query]
   PEFT --> API
-  API --> EVAL[Ragas + golden metrics]
+  API --> EVAL[Golden metrics + S0→S4 compare]
 ```
 
 **Separation:** RAG = facts · PEFT = schema / intent / action codes ([ADR-001](docs/adr/ADR-001-rag-vs-peft-separation.md) · [ADR-019](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-019-rag-facts-peft-behavior.md))

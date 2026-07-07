@@ -112,7 +112,10 @@ export default function HomePage() {
   return (
     <main>
       <h1>DomainForge</h1>
-      <p className="subtitle">RAG facts · SFT schema · DPO alignment — S0→S4 eval ladder</p>
+      <p className="subtitle">
+        RAG facts · SFT schema · DPO alignment — S0→S4 eval ladder ·{' '}
+        <a href="/bench">Local AI bench</a>
+      </p>
 
       <div className="panel">
         <label htmlFor="message">Customer message</label>

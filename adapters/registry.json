@@ -1,3 +1,42 @@
 {
-  "adapters": []
+  "adapters": [
+    {
+      "id": "sft",
+      "path": "/private/var/folders/vs/gc7t33fn62l618z596d3r4640000gn/T/pytest-of-lakshmipraveenabodempudi/pytest-31/test_tiny_pipeline_smoke0/sft",
+      "base_model": "sshleifer/tiny-gpt2",
+      "status": "candidate",
+      "eval_scores": {},
+      "training_manifest": {
+        "base_model": "sshleifer/tiny-gpt2",
+        "device": "cpu",
+        "use_qlora": false,
+        "max_steps": 2,
+        "train_samples": 378,
+        "val_samples": 27,
+        "wall_seconds": 6.7,
+        "config_path": "/Users/lakshmipraveenabodempudi/domainforge-rag-peft/configs/train_qlora.yaml"
+      },
+      "updated_at": "2026-07-07T05:59:57.344518+00:00"
+    },
+    {
+      "id": "dpo",
+      "path": "/private/var/folders/vs/gc7t33fn62l618z596d3r4640000gn/T/pytest-of-lakshmipraveenabodempudi/pytest-31/test_tiny_pipeline_smoke0/dpo",
+      "base_model": "sshleifer/tiny-gpt2",
+      "status": "candidate",
+      "eval_scores": {},
+      "training_manifest": {
+        "method": "dpo",
+        "base_model": "sshleifer/tiny-gpt2",
+        "adapter_path": "/private/var/folders/vs/gc7t33fn62l618z596d3r4640000gn/T/pytest-of-lakshmipraveenabodempudi/pytest-31/test_tiny_pipeline_smoke0/sft",
+        "device": "cpu",
+        "max_steps": 2,
+        "train_pairs": 7,
+        "val_pairs": 1,
+        "beta": 0.1,
+        "wall_seconds": 4.51,
+        "config_path": "/Users/lakshmipraveenabodempudi/domainforge-rag-peft/configs/train_dpo.yaml"
+      },
+      "updated_at": "2026-07-07T06:00:02.594795+00:00"
+    }
+  ]
 }

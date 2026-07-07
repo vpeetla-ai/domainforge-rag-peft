@@ -32,6 +32,19 @@ def _load_sop_map() -> dict:
     return json.loads(SOP_MAP.read_text(encoding="utf-8"))
 
 
+def test_all_generated_preference_pairs_beat_rejected():
+    pairs = generate_preferences_from_golden(GOLDEN, SOP_MAP, CORPUS)
+    assert len(pairs) >= 10
+    sop_map = _load_sop_map()
+    for pair in pairs:
+        assert chosen_beats_rejected(
+            pair["chosen"],
+            pair["rejected"],
+            pair["gold_intent"],
+            pair.get("allowed_cite_ids", []),
+        ), f"pair failed for reason {pair.get('reject_reason')}"
+
+
 def test_preference_pairs_chosen_beats_rejected():
     with GOLDEN.open(encoding="utf-8") as f:
         row = json.loads(f.readline())

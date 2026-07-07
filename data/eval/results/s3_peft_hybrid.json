@@ -1,0 +1,9 @@
+{
+  "solution_id": "s3_peft_hybrid",
+  "n_examples": 5,
+  "format_adherence_pct": 100.0,
+  "intent_accuracy_pct": 80.0,
+  "rouge_l_pct": 0.0,
+  "consistency_pct": 100.0,
+  "hallucination_freq_pct": 20.0
+}

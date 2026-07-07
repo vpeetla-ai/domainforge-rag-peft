@@ -100,6 +100,12 @@ class CompareRequest(BaseModel):
     solutions: list[SolutionId] | None = None
 
 
+class BenchRequest(BaseModel):
+    models: list[str] | None = None
+    runs: int = 3
+    ollama_base_url: str | None = None
+
+
 class PromoteRequest(BaseModel):
     adapter_id: str
 
@@ -205,6 +211,15 @@ def preference_samples(
         )
     rows = load_jsonl(prefs_path)[: max(1, min(limit, 20))]
     return {"count": len(rows), "pairs": rows}
+
+
+@app.post("/v1/bench/ollama")
+def bench_ollama(req: BenchRequest, settings: Settings = Depends(get_settings)) -> dict[str, Any]:
+    from domainforge.bench.ollama import run_ollama_benchmark
+
+    base = req.ollama_base_url or settings.ollama_base_url
+    models = tuple(req.models) if req.models else None
+    return run_ollama_benchmark(base_url=base, models=models, runs=req.runs)
 
 
 @app.get("/v1/metrics")
