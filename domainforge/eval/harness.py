@@ -17,6 +17,7 @@ class SolutionId(str, Enum):
     S1_NAIVE_RAG = "s1_naive_rag"
     S2_HYBRID_RAG = "s2_hybrid_rag"
     S3_PEFT_HYBRID = "s3_peft_hybrid"
+    S4_DPO_PEFT = "s4_dpo_peft"
 
 
 @dataclass
@@ -38,9 +39,10 @@ class EvalResult:
     rouge_l_pct: float
     consistency_pct: float
     hallucination_freq_pct: float
+    preference_win_rate_pct: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "solution_id": self.solution_id.value,
             "n_examples": self.n_examples,
             "format_adherence_pct": round(self.format_adherence_pct, 2),
@@ -49,6 +51,9 @@ class EvalResult:
             "consistency_pct": round(self.consistency_pct, 2),
             "hallucination_freq_pct": round(self.hallucination_freq_pct, 2),
         }
+        if self.preference_win_rate_pct is not None:
+            payload["preference_win_rate_pct"] = round(self.preference_win_rate_pct, 2)
+        return payload
 
 
 def run_eval(solution_id: SolutionId, examples: list[EvalExample]) -> EvalResult:

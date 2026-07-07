@@ -120,3 +120,36 @@ pre {
   padding: 0.5rem;
   text-align: left;
 }
+
+.pref-card {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.pref-card:first-of-type {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.pref-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.pref-grid h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+}
+
+pre.rejected {
+  border: 1px solid #7f1d1d;
+}
+
+@media (max-width: 720px) {
+  .pref-grid {
+    grid-template-columns: 1fr;
+  }
+}

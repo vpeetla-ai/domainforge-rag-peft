@@ -30,11 +30,21 @@ def generate_triage(
 
     if (
         not settings.mock_llm
-        and solution in (SolutionId.S2_HYBRID_RAG, SolutionId.S3_PEFT_HYBRID)
+        and solution
+        in (
+            SolutionId.S2_HYBRID_RAG,
+            SolutionId.S3_PEFT_HYBRID,
+            SolutionId.S4_DPO_PEFT,
+        )
         and ollama_available(settings.ollama_base_url)
     ):
         try:
-            model = settings.ollama_adapter_model if solution == SolutionId.S3_PEFT_HYBRID else settings.ollama_model
+            if solution == SolutionId.S4_DPO_PEFT:
+                model = settings.ollama_dpo_adapter_model
+            elif solution == SolutionId.S3_PEFT_HYBRID:
+                model = settings.ollama_adapter_model
+            else:
+                model = settings.ollama_model
             triage = generate_with_ollama(user_prompt, settings.ollama_base_url, model)
             return triage, "ollama"
         except Exception:

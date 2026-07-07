@@ -17,6 +17,7 @@ from domainforge.generation.router import generate_triage
 from domainforge.prep.chunk_sop import chunk_all_sops
 from domainforge.rag.factory import create_retriever
 from domainforge.rag.intent_router import detect_intent
+from domainforge.train.dataset import load_jsonl
 from domainforge.train.registry import get_adapter, load_registry
 
 _retriever = None
@@ -191,6 +192,21 @@ def eval_compare(req: CompareRequest) -> dict[str, Any]:
     return compare_solutions(path, solutions=solutions)
 
 
+@app.get("/v1/preferences/samples")
+def preference_samples(
+    limit: int = 5,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    prefs_path = settings.preferences_dir / "train.jsonl"
+    if not prefs_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Preference file not found: {prefs_path}. Run: domainforge-prep build-preferences",
+        )
+    rows = load_jsonl(prefs_path)[: max(1, min(limit, 20))]
+    return {"count": len(rows), "pairs": rows}
+
+
 @app.get("/v1/metrics")
 def metrics(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
     chunk_count = 0
@@ -198,6 +214,8 @@ def metrics(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
         chunk_count = len(chunk_all_sops(settings.corpus_dir, settings.manifest_path))
     chroma_ready = settings.chroma_path.exists() and any(settings.chroma_path.iterdir()) if settings.chroma_path.exists() else False
     adapter = get_adapter(settings.adapter_registry_path, "domainforge-triage-v0")
+    dpo_adapter = get_adapter(settings.adapter_registry_path, "domainforge-triage-dpo-v0")
+    pref_train = settings.preferences_dir / "train.jsonl"
     return {
         "corpus_sop_files": len(list(settings.corpus_dir.glob("*.md"))) if settings.corpus_dir.exists() else 0,
         "corpus_chunks": chunk_count,
@@ -205,4 +223,6 @@ def metrics(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
         "chroma_index_ready": chroma_ready,
         "mock_llm": settings.mock_llm,
         "promoted_adapter": adapter,
+        "dpo_adapter": dpo_adapter,
+        "preference_pairs_train": len(load_jsonl(pref_train)) if pref_train.exists() else 0,
     }

@@ -1,0 +1,17 @@
+# DPO config — Phase 5 (continues from SFT adapter when available)
+base_model: mistralai/Mistral-7B-Instruct-v0.3
+method: dpo
+rank: 16
+alpha: 32
+target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+beta: 0.1
+max_length: 512
+max_prompt_length: 384
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 4
+max_steps: 100
+learning_rate: 5.0e-5

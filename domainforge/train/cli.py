@@ -40,6 +40,22 @@ def main() -> None:
     p_promote = sub.add_parser("promote", help="Promote adapter in registry")
     p_promote.add_argument("--adapter-id", type=str, required=True)
 
+    p_dpo_dry = sub.add_parser("dpo-dry-run", help="Validate DPO preference tokenization")
+    p_dpo_dry.add_argument("--config", type=Path, default=Path("configs/train_dpo.yaml"))
+    p_dpo_dry.add_argument("--prefs-file", type=Path, default=Path("data/preferences/train.jsonl"))
+    p_dpo_dry.add_argument("--base-model", type=str, default=None)
+    p_dpo_dry.add_argument("--tiny-model", type=str, default="sshleifer/tiny-gpt2")
+
+    p_dpo = sub.add_parser("dpo", help="Run DPO preference tuning")
+    p_dpo.add_argument("--config", type=Path, default=Path("configs/train_dpo.yaml"))
+    p_dpo.add_argument("--prefs-file", type=Path, default=Path("data/preferences/train.jsonl"))
+    p_dpo.add_argument("--val-file", type=Path, default=Path("data/preferences/val.jsonl"))
+    p_dpo.add_argument("--adapter-path", type=Path, default=None, help="Optional SFT adapter to continue from")
+    p_dpo.add_argument("--output-dir", type=Path, default=Path("adapters/domainforge-triage-dpo-v0"))
+    p_dpo.add_argument("--base-model", type=str, default=None)
+    p_dpo.add_argument("--max-steps", type=int, default=None)
+    p_dpo.add_argument("--tiny", action="store_true", help="CPU smoke test with tiny model")
+
     args = parser.parse_args()
     missing = check_train_deps()
     if missing:
@@ -79,6 +95,35 @@ def main() -> None:
 
         entry = promote_adapter(Path("adapters/registry.json"), args.adapter_id)
         print(json.dumps(entry, indent=2))
+        return
+
+    if args.command == "dpo-dry-run":
+        from domainforge.train.dpo import dry_run_dpo
+
+        model = args.tiny_model if not args.base_model else args.base_model
+        result = dry_run_dpo(args.prefs_file, args.config, base_model=model)
+        print(json.dumps(result, indent=2))
+        return
+
+    if args.command == "dpo":
+        if not args.prefs_file.exists():
+            print(json.dumps({"status": "blocked", "reason": f"Missing {args.prefs_file}"}))
+            raise SystemExit(1)
+        from domainforge.train.dpo import train_dpo
+
+        base = "sshleifer/tiny-gpt2" if args.tiny else args.base_model
+        result = train_dpo(
+            args.prefs_file,
+            args.val_file,
+            args.output_dir,
+            args.config,
+            base_model=base,
+            adapter_path=args.adapter_path,
+            max_steps=args.max_steps or (3 if args.tiny else None),
+            force_cpu=args.tiny,
+        )
+        print(json.dumps(result, indent=2))
+        return
 
 
 if __name__ == "__main__":

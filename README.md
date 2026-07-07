@@ -3,7 +3,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Fine-tune behavior, retrieve facts** — QLoRA for strict JSON triage + RAG over capstone SOP corpus, with a unified S0→S3 eval harness.
+**Fine-tune behavior, retrieve facts** — QLoRA SFT + DPO alignment for strict JSON triage + RAG over capstone SOP corpus, with a unified S0→S4 eval harness.
 
 | Layer | Repo | Live |
 |-------|------|------|
@@ -36,6 +36,8 @@ flowchart LR
 | Bitext → ChatML SFT prep | **Implemented** (CLI) |
 | S2 hybrid BM25 + lexical RAG | **Implemented** (`RETRIEVER_MODE=hybrid`) |
 | QLoRA training (TRL + PEFT) | **Implemented** (`domainforge-train`) |
+| DPO preference tuning (S4) | **Implemented** (`domainforge-train dpo`) |
+| Preference pair generator | **Implemented** (`domainforge-prep build-preferences`) |
 | Adapter registry + promote API | **Implemented** |
 | Ollama JSON inference | **Implemented** (`MOCK_LLM=false`) |
 | Live API (Render) | **Live** — [domainforge-api.onrender.com](https://domainforge-api.onrender.com) |
@@ -93,9 +95,12 @@ make manifest
 | S1 | Naive RAG (Chroma + cosine) |
 | S2 | Hybrid governed RAG |
 | S3 | PEFT + S2 |
+| S4 | DPO + S3 (preference-aligned) |
 
 ```bash
-domainforge-eval --golden data/eval_golden/sample.jsonl --solution s0_baseline
+domainforge-prep build-preferences
+domainforge-train dpo --tiny          # CPU smoke
+domainforge-eval compare --golden data/eval_golden/sample.jsonl  # add S3/S4 via API
 ```
 
 ## API
@@ -106,7 +111,8 @@ domainforge-eval --golden data/eval_golden/sample.jsonl --solution s0_baseline
 | GET | `/v1/adapters` | Adapter registry (stub) |
 | POST | `/v1/query` | Retrieve SOP chunks for a message |
 | POST | `/v1/eval/run` | Score golden set (`generate=true` for live S0/S1) |
-| POST | `/v1/eval/compare` | S0 vs S1 delta table |
+| POST | `/v1/eval/compare` | S0–S4 delta table (+ preference win-rate for S3 vs S4) |
+| GET | `/v1/preferences/samples` | DPO chosen vs rejected pairs for UI |
 | GET | `/v1/metrics` | Corpus stats |
 
 ## Project layout

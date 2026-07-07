@@ -1,4 +1,4 @@
-.PHONY: install install-dev test lint chunk-sops index-chroma fetch-bitext-sample manifest eval-sample eval-compare api train-dry train-tiny ui-build ui-dev
+.PHONY: install install-dev test lint chunk-sops index-chroma fetch-bitext-sample manifest eval-sample eval-compare build-preferences api train-dry train-tiny dpo-dry dpo-tiny ui-build ui-dev
 
 install:
 	pip install -e .
@@ -48,11 +48,23 @@ eval-sample:
 eval-compare:
 	domainforge-eval compare --golden data/eval_golden/sample.jsonl
 
+eval-compare-s34:
+	domainforge-eval compare --golden data/eval_golden/sample.jsonl
+
+build-preferences:
+	domainforge-prep build-preferences
+
 train-dry:
 	domainforge-train dry-run
 
 train-tiny:
 	domainforge-train train --tiny --max-steps 3 --output-dir adapters/domainforge-triage-v0-smoke
+
+dpo-dry:
+	domainforge-train dpo-dry-run
+
+dpo-tiny:
+	domainforge-train dpo --tiny --max-steps 3 --output-dir adapters/domainforge-triage-dpo-v0-smoke
 
 api:
 	uvicorn api.main:app --reload --port 8090

@@ -46,6 +46,12 @@ def main() -> None:
     p_manifest.add_argument("--data-root", type=Path, default=settings.data_root)
     p_manifest.add_argument("--sop-map", type=Path, default=settings.manifest_path)
 
+    p_prefs = sub.add_parser("build-preferences", help="Build DPO preference pairs from golden eval")
+    p_prefs.add_argument("--golden", type=Path, default=Path("data/eval_golden/sample.jsonl"))
+    p_prefs.add_argument("--sop-map", type=Path, default=settings.manifest_path)
+    p_prefs.add_argument("--corpus-dir", type=Path, default=settings.corpus_dir)
+    p_prefs.add_argument("--out-dir", type=Path, default=Path("data/preferences"))
+
     args = parser.parse_args()
     if args.command == "chunk-sops":
         cmd_chunk_sops(args.corpus_dir, args.sop_map, args.out)
@@ -53,6 +59,16 @@ def main() -> None:
         cmd_fetch_bitext(args.out_dir, args.sop_map, args.max_rows)
     elif args.command == "build-manifests":
         cmd_build_manifests(args.data_root, args.sop_map)
+    elif args.command == "build-preferences":
+        from domainforge.prep.preferences import build_preference_splits
+
+        stats = build_preference_splits(
+            args.golden,
+            args.sop_map,
+            args.corpus_dir,
+            args.out_dir,
+        )
+        print(json.dumps(stats, indent=2))
 
 
 if __name__ == "__main__":
