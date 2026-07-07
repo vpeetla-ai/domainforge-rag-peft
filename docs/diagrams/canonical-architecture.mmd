@@ -1,0 +1,33 @@
+flowchart TB
+  subgraph facts["RAG plane — facts & citations"]
+    SOP["Capstone SOP corpus<br/>13 markdown docs"]
+    CHUNK["Chunk + Chroma index"]
+    HYBRID["S2 hybrid retriever<br/>BM25 + lexical"]
+    SOP --> CHUNK --> HYBRID
+  end
+
+  subgraph behavior["PEFT plane — format & behavior"]
+    BITEXT["Bitext SFT labels"]
+    QLORA["QLoRA adapter S3"]
+    DPO["DPO alignment S4"]
+    REG["Adapter registry + promote gate"]
+    BITEXT --> QLORA --> DPO --> REG
+  end
+
+  MSG["Customer message"] --> API["FastAPI /v1/query"]
+  HYBRID --> API
+  REG -.->|"adapter swap"| API
+  API --> TRIAGE["Structured triage JSON"]
+  API --> EVAL["Golden eval S0→S4<br/>/v1/eval/compare"]
+
+  subgraph serve["Inference paths"]
+    MOCK["Mock LLM<br/>Render free tier"]
+    OLLAMA["Ollama<br/>GPU host"]
+    VLLM["vLLM multi-LoRA<br/>planned — ADR-022"]
+  end
+
+  API --> MOCK
+  API --> OLLAMA
+  API -.-> VLLM
+
+  UI["Next.js demo UI<br/>+ /bench Ollama metrics"] --> API

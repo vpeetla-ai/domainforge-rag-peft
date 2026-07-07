@@ -1,144 +1,123 @@
 # DomainForge — Governed Support Triage Pipeline
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+
+
+<!-- vpeetla-tech-stack:start -->
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square)]() [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square)]() [![Chroma](https://img.shields.io/badge/Chroma-FF6B35?style=flat-square)]() [![PEFT](https://img.shields.io/badge/PEFT-9333EA?style=flat-square)]() [![TRL](https://img.shields.io/badge/TRL-6366F1?style=flat-square)]() [![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square)]() [![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square)]() [![Render](https://img.shields.io/badge/Render-46E3B7?style=flat-square)]()
+<!-- vpeetla-tech-stack:end -->
+## Agent skills (Cursor + Codex)
+
+Org skills: [vpeetla-ai-skills](https://github.com/vpeetla-ai/vpeetla-ai-skills). This repo includes `.cursor/skills/`, `AGENTS.md`, and `CONTEXT.md`.
+
+```bash
+git clone https://github.com/vpeetla-ai/vpeetla-ai-skills.git
+./vpeetla-ai-skills/scripts/install.sh --cursor --codex --project .
+```
+
+---
+
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://domainforge-rag-peft.vercel.app)
+[![API](https://img.shields.io/badge/API-Render-46E3B7)](https://domainforge-api.onrender.com/health)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Fine-tune behavior, retrieve facts** — QLoRA SFT + DPO alignment for strict JSON triage + RAG over capstone SOP corpus, with a unified S0→S4 eval harness.
+**Fine-tune behavior, retrieve facts** — QLoRA SFT + DPO alignment for strict JSON triage over a capstone SOP corpus, with a unified **S0→S4** eval harness.
+
+[▶ Live demo](https://domainforge-rag-peft.vercel.app) · [API health](https://domainforge-api.onrender.com/health) · [Local AI bench](/bench) · [Case study](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/case-studies/domainforge-rag-peft.md)
+
+**Portfolio:** [Case study](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/case-studies/domainforge-rag-peft.md) · [ADR-019 RAG vs PEFT](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-019-rag-facts-peft-behavior.md) · [ADR-022 vLLM target](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-022-domainforge-vllm-multi-lora-serving.md)
+
+## What this is
+
+**DomainForge** is the org's **RAG + MLOps adaptation layer** for customer-support triage: grounded citations from SOPs plus reliable JSON routing schemas — without fine-tuning stale policies into the model weights.
 
 | Layer | Repo | Live |
 |-------|------|------|
-| Knowledge (RAG) | [enterprise_rag_platform](https://github.com/vpeetla-ai/enterprise_rag_platform) | [enterprise-rag-platform-eta.vercel.app](https://enterprise-rag-platform-eta.vercel.app) |
+| Knowledge (access-aware RAG) | [enterprise_rag_platform](https://github.com/vpeetla-ai/enterprise_rag_platform) | [enterprise-rag-platform-eta.vercel.app](https://enterprise-rag-platform-eta.vercel.app) |
 | **This project** | `domainforge-rag-peft` | [domainforge-rag-peft.vercel.app](https://domainforge-rag-peft.vercel.app) |
 | Inference education | [vllm-architecture-lab](https://github.com/vpeetla-ai/vllm-architecture-lab) | [vllm-architecture-lab.vercel.app](https://vllm-architecture-lab.vercel.app) |
+| Voice consumer | [voiceforge-assistant](https://github.com/vpeetla-ai/voiceforge-assistant) | [voiceforge-assistant.vercel.app](https://voiceforge-assistant.vercel.app) |
 
-## Problem
+## How we solve it
 
-Support automation needs **grounded citations** from SOPs and **reliable JSON** for routing — base models hallucinate field names and invent `chunk_id`s.
-
-## Architecture (60s)
-
-```mermaid
-flowchart LR
-  SOP[Capstone SOPs] --> RAG[Retrieve + cite]
-  Bitext[Bitext SFT] --> PEFT[QLoRA adapter]
-  RAG --> API[FastAPI /v1/query]
-  PEFT --> API
-  API --> EVAL[Golden metrics + S0→S4 compare]
-```
+| Problem | Approach |
+|---------|----------|
+| Base models invent `chunk_id`s | **RAG plane** — hybrid retrieval over capstone SOP corpus |
+| RAG-only models break JSON schema | **PEFT plane** — QLoRA SFT + DPO on Bitext labels |
+| Can't prove which layer helps | **S0→S4 eval ladder** — compare solutions on golden set |
+| Irreversible adapter promotion | API-key gated `promote`; blocked on regression |
 
 **Separation:** RAG = facts · PEFT = schema / intent / action codes ([ADR-001](docs/adr/ADR-001-rag-vs-peft-separation.md) · [ADR-019](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-019-rag-facts-peft-behavior.md))
 
+## Architecture
+
+Canonical: [`docs/diagrams/canonical-architecture.mmd`](docs/diagrams/canonical-architecture.mmd)
+
+```mermaid
+flowchart TB
+  subgraph facts["RAG plane — facts & citations"]
+    SOP["Capstone SOP corpus"] --> CHUNK["Chunk + Chroma"] --> HYBRID["S2 hybrid retriever"]
+  end
+  subgraph behavior["PEFT plane — format & behavior"]
+    BITEXT["Bitext SFT"] --> QLORA["QLoRA S3"] --> DPO["DPO S4"] --> REG["Adapter registry"]
+  end
+  MSG["Customer message"] --> API["FastAPI /v1/query"]
+  HYBRID --> API
+  REG -.-> API
+  API --> EVAL["Golden eval S0→S4"]
+```
+
 ## Honest status
 
-| Component | Status |
-|-----------|--------|
-| SOP corpus ingest + chunking | **Implemented** |
-| Bitext → ChatML SFT prep | **Implemented** (CLI) |
-| S2 hybrid BM25 + lexical RAG | **Implemented** (`RETRIEVER_MODE=hybrid`) |
-| QLoRA training (TRL + PEFT) | **Implemented** (`domainforge-train`) |
-| DPO preference tuning (S4) | **Implemented** (`domainforge-train dpo`) |
-| Preference pair generator | **Implemented** (`domainforge-prep build-preferences`) |
-| Adapter registry + promote API | **Implemented** |
-| Ollama JSON inference | **Implemented** (`MOCK_LLM=false`) |
-| Live API (Render) | **Live** — [domainforge-api.onrender.com](https://domainforge-api.onrender.com) |
-| Live UI (Vercel) | **Live** — [domainforge-rag-peft.vercel.app](https://domainforge-rag-peft.vercel.app) |
-| Full Mistral QLoRA + DPO on GPU | Requires CUDA — `scripts/gpu_pipeline.sh` |
-| Ollama real inference (S3/S4) | **Implemented** — merge + `export-ollama` (`MOCK_LLM=false`) |
-| vLLM production serve | Planned |
-
-## Data
-
-| Plane | Source | Files |
-|-------|--------|-------|
-| RAG | Capstone SOPs | 13 Markdown docs in `data/corpus/sop_documents/` |
-| SFT | [Bitext HF dataset](https://huggingface.co/datasets/bitext/Bitext-customer-support-llm-chatbot-training-dataset) | `make fetch-bitext` |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| SOP ingest + hybrid RAG (S1/S2) | ✅ | Chroma + BM25 lexical |
+| QLoRA training + DPO (S3/S4) | ✅ | `domainforge-train` CLI |
+| Preference pairs + win-rate | ✅ | `/v1/preferences/samples` |
+| Adapter registry + promote gate | ✅ | API-key on promote |
+| Live API + UI | ✅ | Render + Vercel |
+| Ollama inference | ✅ | `MOCK_LLM=false` + GPU host |
+| Ollama bench UI | ✅ | `/bench` route |
+| Golden eval CI gate | ✅ | `domainforge.triage_preference_v1` |
+| Full Mistral QLoRA on GPU | 🟡 | `scripts/gpu_pipeline.sh` — user RunPod |
+| vLLM multi-LoRA serve | ⬜ Planned | [ADR-022](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-022-domainforge-vllm-multi-lora-serving.md) |
 
 ## Quick start
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-make chunk-sops
-make test
-make eval-compare
+make chunk-sops && make test && make eval-compare
 make api   # http://localhost:8090/health
 ```
 
-**QLoRA training (CPU smoke / GPU production):**
+**UI (local):**
 
 ```bash
-pip install -e ".[train]"           # CPU smoke
-pip install -e ".[train,train-gpu]" # CUDA QLoRA (bitsandbytes)
-make train-dry
-make train-tiny
-make dpo-tiny
-make pipeline-smoke                 # full S3→DPO orchestration on tiny-gpt2
+cd ui && NEXT_PUBLIC_API_URL=http://localhost:8090 npm run dev
 ```
 
-**GPU → Ollama (real inference):** see [docs/GPU_OLLAMA_PIPELINE.md](docs/GPU_OLLAMA_PIPELINE.md)
+**GPU → Ollama:** [docs/GPU_OLLAMA_PIPELINE.md](docs/GPU_OLLAMA_PIPELINE.md)
 
-```bash
-bash scripts/gpu_pipeline.sh      # CUDA: SFT → DPO → merge → Modelfile
-# Then: MOCK_LLM=false + OLLAMA_BASE_URL on API
-```
-
-**UI (Vercel / local):**
-
-```bash
-make api                # terminal 1
-cd ui && NEXT_PUBLIC_API_URL=http://localhost:8090 npm run dev   # terminal 2
-```
-
-**Full SFT splits (requires network):**
-
-```bash
-pip install -e ".[dev,prep]"
-make fetch-bitext
-make manifest
-```
-
-## Solution ladder (eval)
+## Solution ladder
 
 | ID | Description |
 |----|-------------|
 | S0 | Base model, no retrieval |
-| S1 | Naive RAG (Chroma + cosine) |
+| S1 | Naive RAG |
 | S2 | Hybrid governed RAG |
 | S3 | PEFT + S2 |
-| S4 | DPO + S3 (preference-aligned) |
+| S4 | DPO + S3 |
 
-```bash
-domainforge-prep build-preferences
-domainforge-train dpo --tiny          # CPU smoke
-domainforge-eval compare --golden data/eval_golden/sample.jsonl  # add S3/S4 via API
-```
+## Deploy
 
-## API
+| Target | URL / config |
+|--------|----------------|
+| API (Render) | [domainforge-api.onrender.com](https://domainforge-api.onrender.com) — cold start ~30s |
+| UI (Vercel) | `ui/` static export · `NEXT_PUBLIC_API_URL` |
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Liveness |
-| GET | `/v1/adapters` | Adapter registry (stub) |
-| POST | `/v1/query` | Retrieve SOP chunks for a message |
-| POST | `/v1/eval/run` | Score golden set (`generate=true` for live S0/S1) |
-| POST | `/v1/eval/compare` | S0–S4 delta table (+ preference win-rate for S3 vs S4) |
-| GET | `/v1/preferences/samples` | DPO chosen vs rejected pairs for UI |
-| GET | `/v1/metrics` | Corpus stats |
+## Stack fit
 
-## Project layout
-
-```
-domainforge-rag-peft/
-├── domainforge/     # prep, eval, rag, schemas
-├── api/             # FastAPI
-├── data/            # corpus, manifests, golden eval
-├── docs/adr/
-└── tests/
-```
-
-## Portfolio
-
-Part of [vpeetla-ai](https://github.com/vpeetla-ai) governed stack · Case study: [domainforge-rag-peft.md](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/case-studies/domainforge-rag-peft.md) · Spec: [ENTERPRISE_RAG_PEFT_PIPELINE.md](https://github.com/vpeetla-ai/venkat-ai-portfolio/blob/main/docs/projects/ENTERPRISE_RAG_PEFT_PIPELINE.md)
+**Layer:** Knowledge + MLOps (Pillar 4 fine-tuning + Pillar 1 RAG facts) · Pairs with [Enterprise RAG](https://github.com/vpeetla-ai/enterprise_rag_platform), [vLLM Lab](https://github.com/vpeetla-ai/vllm-architecture-lab), [VoiceForge](https://github.com/vpeetla-ai/voiceforge-assistant).
 
 ## License
 
