@@ -17,5 +17,7 @@ Customer support triage needs grounded answers from SOP documents and strict JSO
 - Adapter promotion blocked if either regresses
 
 ## Links
+- Canonical ADR: [ADR-019](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-019-rag-facts-peft-behavior.md) (ai-architecture-portfolio)
 - Spec: `venkat-ai-portfolio/docs/projects/ENTERPRISE_RAG_PEFT_PIPELINE.md`
 - Manifest: `data/manifests/sop_intent_map.json`
+- Case study: [domainforge-rag-peft.md](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/case-studies/domainforge-rag-peft.md)

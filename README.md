@@ -26,7 +26,7 @@ flowchart LR
   API --> EVAL[Ragas + golden metrics]
 ```
 
-**Separation:** RAG = facts · PEFT = schema / intent / action codes ([ADR-001](docs/adr/ADR-001-rag-vs-peft-separation.md))
+**Separation:** RAG = facts · PEFT = schema / intent / action codes ([ADR-001](docs/adr/ADR-001-rag-vs-peft-separation.md) · [ADR-019](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-019-rag-facts-peft-behavior.md))
 
 ## Honest status
 
@@ -122,7 +122,7 @@ domainforge-rag-peft/
 
 ## Portfolio
 
-Part of [vpeetla-ai](https://github.com/vpeetla-ai) governed stack · Spec: [ENTERPRISE_RAG_PEFT_PIPELINE.md](https://github.com/vpeetla-ai/venkat-ai-portfolio/blob/main/docs/projects/ENTERPRISE_RAG_PEFT_PIPELINE.md)
+Part of [vpeetla-ai](https://github.com/vpeetla-ai) governed stack · Case study: [domainforge-rag-peft.md](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/case-studies/domainforge-rag-peft.md) · Spec: [ENTERPRISE_RAG_PEFT_PIPELINE.md](https://github.com/vpeetla-ai/venkat-ai-portfolio/blob/main/docs/projects/ENTERPRISE_RAG_PEFT_PIPELINE.md)
 
 ## License
 
