@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd ui && npm install && npm run build",
+  "outputDirectory": "ui/out",
+  "installCommand": "echo skip-root-install",
+  "framework": null
+}

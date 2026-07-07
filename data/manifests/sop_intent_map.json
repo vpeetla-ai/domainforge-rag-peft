@@ -1,0 +1,226 @@
+{
+  "version": "1.0",
+  "description": "Maps capstone SOP documents to Bitext intent tags for RAG chunk metadata and citation routing. Copy to domainforge-rag-peft/data/manifests/sop_intent_map.json",
+  "bitext_categories": [
+    "ACCOUNT",
+    "CANCELLATION_FEE",
+    "CONTACT",
+    "DELIVERY",
+    "FEEDBACK",
+    "INVOICE",
+    "ORDER",
+    "PAYMENT",
+    "REFUND",
+    "SHIPPING_ADDRESS",
+    "SUBSCRIPTION"
+  ],
+  "documents": [
+    {
+      "source_file": "account_recovery.md",
+      "category": "ACCOUNT",
+      "intent_tags": [
+        "recover_password",
+        "registration_problems",
+        "switch_account",
+        "edit_account"
+      ],
+      "priority_default": "high",
+      "chunk_strategy": "section",
+      "sections": ["Scope", "Verification Steps", "Account Restoration", "Escalation"]
+    },
+    {
+      "source_file": "billing_disputes.md",
+      "category": "PAYMENT",
+      "intent_tags": [
+        "payment_issue",
+        "check_invoice",
+        "get_invoice"
+      ],
+      "priority_default": "high",
+      "chunk_strategy": "section",
+      "sections": ["Scope", "Dispute Types", "Agent Steps", "Escalation"]
+    },
+    {
+      "source_file": "data_privacy.md",
+      "category": "ACCOUNT",
+      "intent_tags": [
+        "delete_account",
+        "edit_account",
+        "contact_customer_service"
+      ],
+      "priority_default": "high",
+      "chunk_strategy": "section",
+      "sections": ["Scope", "Data Requests", "Retention", "Escalation"]
+    },
+    {
+      "source_file": "escalation_matrix.md",
+      "category": "CONTACT",
+      "intent_tags": [
+        "contact_human_agent",
+        "contact_customer_service",
+        "complaint"
+      ],
+      "priority_default": "medium",
+      "chunk_strategy": "section",
+      "sections": ["Severity Levels", "Authority Limits", "Routing", "Handing Off"]
+    },
+    {
+      "source_file": "order_tracking.md",
+      "category": "ORDER",
+      "intent_tags": [
+        "track_order",
+        "change_order"
+      ],
+      "priority_default": "medium",
+      "chunk_strategy": "section",
+      "sections": [
+        "Order States",
+        "Finding The Order",
+        "Delivered But Not Received",
+        "Exceptions",
+        "Communication"
+      ]
+    },
+    {
+      "source_file": "password_reset.md",
+      "category": "ACCOUNT",
+      "intent_tags": [
+        "recover_password",
+        "registration_problems"
+      ],
+      "priority_default": "medium",
+      "chunk_strategy": "section",
+      "sections": ["Scope", "Self-Service Reset", "Agent-Assisted Reset", "Security"]
+    },
+    {
+      "source_file": "payment_methods.md",
+      "category": "PAYMENT",
+      "intent_tags": [
+        "check_payment_methods",
+        "payment_issue"
+      ],
+      "priority_default": "medium",
+      "chunk_strategy": "section",
+      "sections": ["Accepted Methods", "Failed Payments", "Agent Steps"]
+    },
+    {
+      "source_file": "product_return.md",
+      "category": "ORDER",
+      "intent_tags": [
+        "change_order",
+        "cancel_order"
+      ],
+      "priority_default": "medium",
+      "chunk_strategy": "section",
+      "sections": ["Eligibility", "Return Process", "Refunds", "Agent Steps"]
+    },
+    {
+      "source_file": "refund_policy.md",
+      "category": "REFUND",
+      "intent_tags": [
+        "get_refund",
+        "check_refund_policy",
+        "track_refund"
+      ],
+      "priority_default": "medium",
+      "chunk_strategy": "section",
+      "sections": [
+        "Eligibility",
+        "Refund Methods",
+        "Processing Time",
+        "Partial Refunds",
+        "Agent Steps",
+        "Escalation"
+      ]
+    },
+    {
+      "source_file": "shipping_delays.md",
+      "category": "DELIVERY",
+      "intent_tags": [
+        "delivery_period",
+        "delivery_options"
+      ],
+      "priority_default": "medium",
+      "chunk_strategy": "section",
+      "sections": ["Scope", "Delay Thresholds", "Customer Options", "Agent Steps"]
+    },
+    {
+      "source_file": "subscription_cancellation.md",
+      "category": "SUBSCRIPTION",
+      "intent_tags": [
+        "cancel_order",
+        "check_cancellation_fee",
+        "newsletter_subscription"
+      ],
+      "priority_default": "medium",
+      "chunk_strategy": "section",
+      "sections": ["Cancellation Options", "Refunds", "Agent Steps"]
+    },
+    {
+      "source_file": "technical_troubleshooting.md",
+      "category": "ACCOUNT",
+      "intent_tags": [
+        "registration_problems",
+        "contact_customer_service"
+      ],
+      "priority_default": "medium",
+      "chunk_strategy": "section",
+      "sections": ["Common Issues", "Diagnostics", "Escalation to Engineering"]
+    },
+    {
+      "source_file": "working_hours.md",
+      "category": "CONTACT",
+      "intent_tags": [
+        "contact_customer_service",
+        "contact_human_agent"
+      ],
+      "priority_default": "low",
+      "chunk_strategy": "section",
+      "sections": ["Hours", "Channels", "After-Hours"]
+    }
+  ],
+  "intent_gaps": {
+    "description": "Bitext intents with no dedicated SOP — add faq_supplement/*.md in v1.1 or route to nearest SOP",
+    "intents": [
+      "create_account",
+      "delete_account",
+      "place_order",
+      "set_up_shipping_address",
+      "change_shipping_address",
+      "review",
+      "check_cancellation_fee"
+    ],
+    "fallback_sop": {
+      "create_account": "account_recovery.md",
+      "delete_account": "data_privacy.md",
+      "place_order": "order_tracking.md",
+      "set_up_shipping_address": "order_tracking.md",
+      "change_shipping_address": "order_tracking.md",
+      "review": "escalation_matrix.md",
+      "check_cancellation_fee": "subscription_cancellation.md"
+    }
+  },
+  "action_code_enum": {
+    "description": "suggested_action values in PEFT JSON targets — not free-text facts",
+    "values": [
+      "lookup_order_status",
+      "initiate_refund",
+      "explain_refund_policy",
+      "track_refund_status",
+      "reset_password",
+      "recover_account",
+      "explain_payment_methods",
+      "resolve_payment_issue",
+      "cancel_subscription",
+      "explain_cancellation_options",
+      "escalate_to_supervisor",
+      "escalate_to_security",
+      "provide_tracking_info",
+      "open_carrier_investigation",
+      "explain_return_process",
+      "explain_working_hours",
+      "route_to_specialist",
+      "no_action_required"
+    ]
+  }
+}

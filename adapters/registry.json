@@ -1,0 +1,22 @@
+{
+  "adapters": [
+    {
+      "id": "domainforge-triage-v0-smoke",
+      "path": "adapters/domainforge-triage-v0-smoke",
+      "base_model": "sshleifer/tiny-gpt2",
+      "status": "candidate",
+      "eval_scores": {},
+      "training_manifest": {
+        "base_model": "sshleifer/tiny-gpt2",
+        "device": "cpu",
+        "use_qlora": false,
+        "max_steps": 3,
+        "train_samples": 378,
+        "val_samples": 27,
+        "wall_seconds": 16.46,
+        "config_path": "configs/train_qlora.yaml"
+      },
+      "updated_at": "2026-07-07T04:35:41.154550+00:00"
+    }
+  ]
+}

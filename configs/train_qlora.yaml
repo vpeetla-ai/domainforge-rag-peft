@@ -1,0 +1,17 @@
+# Default QLoRA config — Phase 3
+base_model: mistralai/Mistral-7B-Instruct-v0.3
+method: qlora
+rank: 16
+alpha: 32
+target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+max_seq_length: 2048
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 8
+num_train_epochs: 2
+learning_rate: 2.0e-4
+early_stopping_patience: 3
+quantization: 4bit

@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "domainforge"
+version = "0.3.0"
+description = "Governed support triage: RAG corpus + QLoRA + Ragas eval pipeline"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "vpeetla-ai" }]
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "pydantic>=2.9.0",
+  "pydantic-settings>=2.6.0",
+  "httpx>=0.28.0",
+  "python-multipart>=0.0.17",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.24.0",
+  "ruff>=0.8.0",
+]
+prep = [
+  "datasets>=3.0.0",
+  "pandas>=2.2.0",
+]
+rag = [
+  "chromadb>=0.5.0",
+  "sentence-transformers>=3.0.0",
+]
+eval = [
+  "rouge-score>=0.1.2",
+  "sacrebleu>=2.4.0",
+]
+train = [
+  "torch>=2.2.0,<2.5.0",
+  "numpy<2",
+  "transformers>=4.41.0,<4.46.0",
+  "peft>=0.11.0,<0.14.0",
+  "trl>=0.9.0,<0.10.0",
+  "pyyaml>=6.0.0",
+  "accelerate>=0.33.0,<0.35.0",
+  "datasets>=2.19.0",
+]
+train-gpu = [
+  "bitsandbytes>=0.44.0",
+]
+api = [
+  "gunicorn>=23.0.0",
+]
+
+[project.scripts]
+domainforge-prep = "domainforge.prep.cli:main"
+domainforge-eval = "domainforge.eval.cli:main"
+domainforge-index = "domainforge.rag.cli:main"
+domainforge-train = "domainforge.train.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["domainforge*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+pythonpath = ["."]
+markers = [
+  "train: tests requiring transformers/torch training stack",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

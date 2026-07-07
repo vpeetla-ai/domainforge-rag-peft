@@ -1,0 +1,40 @@
+# secrets
+.env
+*.pem
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# data — never commit raw HF cache or private tickets
+data/private/
+data/sft_pairs/raw/
+data/eda/*.ipynb_checkpoints/
+.hf_cache/
+*.hf_cache/
+
+# training artifacts
+adapters/**/*
+!adapters/registry.json
+mlruns/
+wandb/
+
+# generated indexes
+data/corpus/sop_chunks.json
+data/indexes/
+chroma/
+
+# os
+.DS_Store
+
+# node
+ui/node_modules/
+ui/.next/
+ui/out/

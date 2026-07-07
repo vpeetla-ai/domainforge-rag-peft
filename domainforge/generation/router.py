@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+import json
+
+from domainforge.config import Settings
+from domainforge.eval.harness import SolutionId
+from domainforge.generation.baseline import generate_triage_json
+from domainforge.prep.chatml import SYSTEM_PROMPT
+from domainforge.rag.naive import RetrievedChunk, format_context_blocks
+from domainforge.serve.ollama import generate_with_ollama, ollama_available
+
+
+def build_user_prompt(message: str, context_blocks: list[str]) -> str:
+    parts = context_blocks + [f"Customer message: {message}"]
+    return "\n\n".join(parts)
+
+
+def generate_triage(
+    message: str,
+    solution: SolutionId,
+    settings: Settings,
+    retrieved: list[RetrievedChunk],
+    intent_hint: str | None = None,
+) -> tuple[str, str]:
+    """
+    Returns (triage_json, backend) where backend is baseline|ollama.
+    """
+    blocks = format_context_blocks(retrieved)
+    user_prompt = build_user_prompt(message, blocks)
+
+    if (
+        not settings.mock_llm
+        and solution in (SolutionId.S2_HYBRID_RAG, SolutionId.S3_PEFT_HYBRID)
+        and ollama_available(settings.ollama_base_url)
+    ):
+        try:
+            model = settings.ollama_adapter_model if solution == SolutionId.S3_PEFT_HYBRID else settings.ollama_model
+            triage = generate_with_ollama(user_prompt, settings.ollama_base_url, model)
+            return triage, "ollama"
+        except Exception:
+            pass
+
+    triage = generate_triage_json(
+        message,
+        solution,
+        sop_map_path=settings.manifest_path,
+        retrieved=retrieved,
+        gold_intent=intent_hint,
+    )
+    return triage, "baseline"

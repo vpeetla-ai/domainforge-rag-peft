@@ -1,0 +1,74 @@
+{
+  "version": "1.0",
+  "created_at": "2026-07-07T02:01:25.701462+00:00",
+  "sop_map_sha256": "680cbc2e8ec22d8b0621f2e51ff298e66ea8b5a731dc9ae89d50a672ff46f989",
+  "corpus_files": [
+    {
+      "path": "corpus/sop_documents/account_recovery.md",
+      "sha256": "bf22ea4ff6927c32829f4e76e438fa1eaefa6e68d4fb9b88c413b7a276f7785d"
+    },
+    {
+      "path": "corpus/sop_documents/billing_disputes.md",
+      "sha256": "95aacf0cd633f8ba6d7f0fab0918ff1346d453a60399a41e72e24d373c4414f7"
+    },
+    {
+      "path": "corpus/sop_documents/data_privacy.md",
+      "sha256": "fb7e996bca8894b9945abaf4c73e73dce7f6282c41b79a554786b3a24a0ce508"
+    },
+    {
+      "path": "corpus/sop_documents/escalation_matrix.md",
+      "sha256": "b9e388f9b1d75cf9e7b28e23a0064e0270f90f93c4b7bb1813381ae67b11c9f3"
+    },
+    {
+      "path": "corpus/sop_documents/order_tracking.md",
+      "sha256": "641a8bb8fffae17bf337175641d9f82bbc35c950e1c1de3f057f5c707dc39526"
+    },
+    {
+      "path": "corpus/sop_documents/password_reset.md",
+      "sha256": "507d1e65b51e0a52e07bf31902c82d00f8f44b06fad14379841e3f2cc4f2e7d4"
+    },
+    {
+      "path": "corpus/sop_documents/payment_methods.md",
+      "sha256": "f47b0fe7eb847ab4b5261d9909a6ea3e937e999b71e5bb40c090b92fdaeb4739"
+    },
+    {
+      "path": "corpus/sop_documents/product_return.md",
+      "sha256": "a47d6dbf582d80f352ecbe0edc0a45e71340ea6278aabc587503f86bd7145756"
+    },
+    {
+      "path": "corpus/sop_documents/refund_policy.md",
+      "sha256": "debd93f77926af264041d85cf1568cd9584d98ecb50784c9e2f02d89b9765b61"
+    },
+    {
+      "path": "corpus/sop_documents/shipping_delays.md",
+      "sha256": "3e08d86f821e30b40d855c0e3ef3e1a23dc1b059c4ddef895123a58711968109"
+    },
+    {
+      "path": "corpus/sop_documents/subscription_cancellation.md",
+      "sha256": "82e1aaf308c158890fabb5b15aab755c63fe10a37f5c0cd2a55544b74c7a4360"
+    },
+    {
+      "path": "corpus/sop_documents/technical_troubleshooting.md",
+      "sha256": "bae2d06b8c15096da0b46a75c81797491d3a175a1a8afe4b4e75bb3f05396920"
+    },
+    {
+      "path": "corpus/sop_documents/working_hours.md",
+      "sha256": "d5a1c29633f2d85beacbe66781614fc03c4e0c582e743f23e8047acd1a56649f"
+    }
+  ],
+  "sft_train": {
+    "path": "sft_pairs/train.jsonl",
+    "sha256": "dce554904a181d60e1c7725fdf8e005c351fcea7798a2922f070faf7869bcacf",
+    "lines": 378
+  },
+  "sft_val": {
+    "path": "sft_pairs/val.jsonl",
+    "sha256": "d4e89e46cc15474a91300a26e204fc53231ad8fa7bbc4ea07e9f899b31bcd6e9",
+    "lines": 27
+  },
+  "sft_test": {
+    "path": "sft_pairs/test.jsonl",
+    "sha256": "609148a27e311885443f32714583e0d7b1b3bad91e176b1d0c1fc31229ce269f",
+    "lines": 81
+  }
+}
