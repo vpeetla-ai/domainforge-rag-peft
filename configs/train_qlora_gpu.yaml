@@ -1,0 +1,16 @@
+# Mistral-7B QLoRA — CUDA GPU (24GB+ VRAM recommended)
+base_model: mistralai/Mistral-7B-Instruct-v0.3
+method: qlora
+rank: 16
+alpha: 32
+target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+max_seq_length: 2048
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 8
+max_steps: 200
+learning_rate: 2.0e-4
+num_train_epochs: 1

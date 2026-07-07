@@ -66,6 +66,12 @@ dpo-dry:
 dpo-tiny:
 	domainforge-train dpo --tiny --max-steps 3 --output-dir adapters/domainforge-triage-dpo-v0-smoke
 
+pipeline-smoke:
+	domainforge-train pipeline-gpu --tiny-pipeline --skip-ollama-create
+
+pipeline-gpu:
+	bash scripts/gpu_pipeline.sh --skip-ollama-create
+
 api:
 	uvicorn api.main:app --reload --port 8090
 

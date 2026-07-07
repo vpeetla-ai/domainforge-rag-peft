@@ -56,6 +56,28 @@ def main() -> None:
     p_dpo.add_argument("--max-steps", type=int, default=None)
     p_dpo.add_argument("--tiny", action="store_true", help="CPU smoke test with tiny model")
 
+    p_merge = sub.add_parser("merge", help="Merge LoRA adapter into standalone HF weights")
+    p_merge.add_argument("--adapter-dir", type=Path, required=True)
+    p_merge.add_argument("--output-dir", type=Path, required=True)
+    p_merge.add_argument("--base-model", type=str, default=None)
+
+    p_export = sub.add_parser("export-ollama", help="Merge adapter and write Ollama Modelfile")
+    p_export.add_argument("--adapter-dir", type=Path, required=True)
+    p_export.add_argument("--model-name", type=str, required=True)
+    p_export.add_argument("--base-model", type=str, default=None)
+    p_export.add_argument("--no-create", action="store_true", help="Skip ollama create (Modelfile only)")
+
+    p_pipe = sub.add_parser("pipeline-gpu", help="S3 SFT → DPO S4 → eval gate → Ollama export")
+    p_pipe.add_argument("--sft-config", type=Path, default=Path("configs/train_qlora_gpu.yaml"))
+    p_pipe.add_argument("--dpo-config", type=Path, default=Path("configs/train_dpo_gpu.yaml"))
+    p_pipe.add_argument("--sft-output", type=Path, default=Path("adapters/domainforge-triage-v0"))
+    p_pipe.add_argument("--dpo-output", type=Path, default=Path("adapters/domainforge-triage-dpo-v0"))
+    p_pipe.add_argument("--sft-steps", type=int, default=200)
+    p_pipe.add_argument("--dpo-steps", type=int, default=100)
+    p_pipe.add_argument("--golden", type=Path, default=Path("data/eval_golden/sample.jsonl"))
+    p_pipe.add_argument("--tiny-pipeline", action="store_true", help="CPU smoke: tiny-gpt2, 3 steps each")
+    p_pipe.add_argument("--skip-ollama-create", action="store_true")
+
     args = parser.parse_args()
     missing = check_train_deps()
     if missing:
@@ -122,6 +144,57 @@ def main() -> None:
             max_steps=args.max_steps or (3 if args.tiny else None),
             force_cpu=args.tiny,
         )
+        print(json.dumps(result, indent=2))
+        return
+
+    if args.command == "merge":
+        from domainforge.train.export import merge_adapter_to_hf
+
+        result = merge_adapter_to_hf(
+            args.adapter_dir,
+            args.output_dir,
+            base_model=args.base_model,
+            force_cpu=True,
+        )
+        print(json.dumps(result, indent=2))
+        return
+
+    if args.command == "export-ollama":
+        from domainforge.train.export import package_for_ollama
+
+        result = package_for_ollama(
+            args.adapter_dir,
+            model_name=args.model_name,
+            base_model=args.base_model,
+            create_model=not args.no_create,
+            force_cpu=True,
+        )
+        print(json.dumps(result, indent=2))
+        return
+
+    if args.command == "pipeline-gpu":
+        from domainforge.train.pipeline import run_gpu_pipeline
+
+        tiny = args.tiny_pipeline
+        try:
+            result = run_gpu_pipeline(
+                train_file=Path("data/sft_pairs/train.jsonl"),
+                val_file=Path("data/sft_pairs/val.jsonl"),
+                prefs_train=Path("data/preferences/train.jsonl"),
+                prefs_val=Path("data/preferences/val.jsonl"),
+                golden_path=args.golden,
+                sft_config=args.sft_config if not tiny else Path("configs/train_qlora.yaml"),
+                dpo_config=args.dpo_config if not tiny else Path("configs/train_dpo.yaml"),
+                sft_output=args.sft_output if not tiny else Path("adapters/domainforge-triage-pipeline-smoke"),
+                dpo_output=args.dpo_output if not tiny else Path("adapters/domainforge-triage-dpo-pipeline-smoke"),
+                sft_steps=3 if tiny else args.sft_steps,
+                dpo_steps=3 if tiny else args.dpo_steps,
+                skip_ollama_create=args.skip_ollama_create or tiny,
+                force_cpu=tiny,
+            )
+        except RuntimeError as exc:
+            print(json.dumps({"status": "blocked", "reason": str(exc)}))
+            raise SystemExit(1) from exc
         print(json.dumps(result, indent=2))
         return
 

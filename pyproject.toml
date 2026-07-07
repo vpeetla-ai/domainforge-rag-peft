@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "domainforge"
-version = "0.4.0"
+version = "0.4.1"
 description = "Governed support triage: RAG corpus + QLoRA + Ragas eval pipeline"
 readme = "README.md"
 requires-python = ">=3.11"

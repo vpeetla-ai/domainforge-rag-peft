@@ -42,7 +42,8 @@ flowchart LR
 | Ollama JSON inference | **Implemented** (`MOCK_LLM=false`) |
 | Live API (Render) | **Live** — [domainforge-api.onrender.com](https://domainforge-api.onrender.com) |
 | Live UI (Vercel) | **Live** — [domainforge-rag-peft.vercel.app](https://domainforge-rag-peft.vercel.app) |
-| Full Mistral QLoRA on GPU | Requires CUDA + `make train` |
+| Full Mistral QLoRA + DPO on GPU | Requires CUDA — `scripts/gpu_pipeline.sh` |
+| Ollama real inference (S3/S4) | **Implemented** — merge + `export-ollama` (`MOCK_LLM=false`) |
 | vLLM production serve | Planned |
 
 ## Data
@@ -66,10 +67,19 @@ make api   # http://localhost:8090/health
 **QLoRA training (CPU smoke / GPU production):**
 
 ```bash
-pip install -e ".[train]"
-make train-dry          # validate tokenization
-make train-tiny         # 3-step smoke on tiny-gpt2 (CPU)
-# GPU: domainforge-train train --max-steps 200
+pip install -e ".[train]"           # CPU smoke
+pip install -e ".[train,train-gpu]" # CUDA QLoRA (bitsandbytes)
+make train-dry
+make train-tiny
+make dpo-tiny
+make pipeline-smoke                 # full S3→DPO orchestration on tiny-gpt2
+```
+
+**GPU → Ollama (real inference):** see [docs/GPU_OLLAMA_PIPELINE.md](docs/GPU_OLLAMA_PIPELINE.md)
+
+```bash
+bash scripts/gpu_pipeline.sh      # CUDA: SFT → DPO → merge → Modelfile
+# Then: MOCK_LLM=false + OLLAMA_BASE_URL on API
 ```
 
 **UI (Vercel / local):**

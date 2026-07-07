@@ -49,3 +49,11 @@ curl https://domainforge-api.onrender.com/v1/metrics
 
 - Render cold start ~30–60s after idle — first `/v1/query` may be slow
 - UI is static export on Vercel (always warm)
+- Render cannot train Mistral or host Ollama — use [GPU_OLLAMA_PIPELINE.md](GPU_OLLAMA_PIPELINE.md)
+
+## Real inference (Ollama on GPU host)
+
+1. Train on CUDA: `bash scripts/gpu_pipeline.sh`
+2. On GPU machine: `ollama serve` + models `domainforge-triage` / `domainforge-triage-dpo`
+3. Render env: `MOCK_LLM=false`, `OLLAMA_BASE_URL=http://<gpu-host>:11434`
+4. Query with `solution=s3_peft_hybrid` or `s4_dpo_peft` — response `inference_backend: ollama`
