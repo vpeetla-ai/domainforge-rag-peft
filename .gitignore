@@ -38,3 +38,6 @@ chroma/
 ui/node_modules/
 ui/.next/
 ui/out/
+
+# python venv
+.venv/
