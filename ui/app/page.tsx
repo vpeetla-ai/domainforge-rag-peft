@@ -110,12 +110,15 @@ export default function HomePage() {
   }
 
   return (
-    <main>
-      <h1>DomainForge</h1>
-      <p className="subtitle">
-        RAG facts · SFT schema · DPO alignment — S0→S4 eval ladder ·{' '}
-        <a href="/bench">Local AI bench</a>
-      </p>
+    <>
+      <div className="page-hero">
+        <p className="eyebrow">Support triage pipeline</p>
+        <h1>DomainForge</h1>
+        <p className="subtitle">
+          RAG facts · SFT schema · DPO alignment — compare solutions S0 through S4 on the same
+          customer message.
+        </p>
+      </div>
 
       <div className="panel">
         <label htmlFor="message">Customer message</label>
@@ -155,7 +158,7 @@ export default function HomePage() {
             </button>
           </div>
         </div>
-        {error && <p style={{ color: '#fca5a5' }}>{error}</p>}
+        {error && <p className="alert alert-error">{error}</p>}
       </div>
 
       {result && (
@@ -228,6 +231,6 @@ export default function HomePage() {
           ))}
         </div>
       )}
-    </main>
+    </>
   );
 }

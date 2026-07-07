@@ -38,18 +38,23 @@ export default function BenchPage() {
   }
 
   return (
-    <main>
-      <h1>DomainForge — Local AI Bench</h1>
-      <p className="subtitle">Ollama tokens/sec and P50/P95 latency for structured JSON triage</p>
+    <>
+      <div className="page-hero">
+        <p className="eyebrow">Local inference benchmark</p>
+        <h1>Ollama bench</h1>
+        <p className="subtitle">
+          Tokens/sec and P50/P95 latency for structured JSON triage on local Ollama models.
+        </p>
+      </div>
       <div className="panel">
         <button type="button" onClick={() => void runBench()} disabled={loading}>
           {loading ? 'Running…' : 'Run Ollama benchmark'}
         </button>
-        {error && <p className="error">{error}</p>}
+        {error && <p className="alert alert-error">{error}</p>}
       </div>
       {rows.length > 0 && (
         <div className="panel">
-          <table className="status-table">
+          <table className="compare-table">
             <thead>
               <tr>
                 <th>Model</th>
@@ -75,9 +80,6 @@ export default function BenchPage() {
           </table>
         </div>
       )}
-      <p style={{ marginTop: '1rem' }}>
-        <a href="/">← Back to DomainForge</a>
-      </p>
-    </main>
+    </>
   );
 }
