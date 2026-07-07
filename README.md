@@ -38,7 +38,8 @@ flowchart LR
 | QLoRA training (TRL + PEFT) | **Implemented** (`domainforge-train`) |
 | Adapter registry + promote API | **Implemented** |
 | Ollama JSON inference | **Implemented** (`MOCK_LLM=false`) |
-| Next.js compare UI | **Implemented** (`ui/`) |
+| Live API (Render) | **Live** — [domainforge-api.onrender.com](https://domainforge-api.onrender.com) |
+| Live UI (Vercel) | **Live** — [domainforge-rag-peft.vercel.app](https://domainforge-rag-peft.vercel.app) |
 | Full Mistral QLoRA on GPU | Requires CUDA + `make train` |
 | vLLM production serve | Planned |
 

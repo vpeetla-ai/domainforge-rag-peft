@@ -136,7 +136,7 @@ def promote_adapter_endpoint(req: PromoteRequest, settings: Settings = Depends(g
 
 
 @app.post("/v1/query", response_model=QueryResponse)
-def query(req: QueryRequest, settings: Settings = Depends(get_settings), _: None = Depends(require_api_key)) -> QueryResponse:
+def query(req: QueryRequest, settings: Settings = Depends(get_settings)) -> QueryResponse:
     if _retriever is None:
         raise HTTPException(status_code=503, detail="Retriever not initialized")
 
@@ -167,7 +167,7 @@ def query(req: QueryRequest, settings: Settings = Depends(get_settings), _: None
 
 
 @app.post("/v1/eval/run")
-def eval_run(req: EvalRunRequest, _: None = Depends(require_api_key)) -> dict[str, Any]:
+def eval_run(req: EvalRunRequest) -> dict[str, Any]:
     path = Path(req.golden_path)
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"Golden file not found: {path}")
@@ -179,7 +179,7 @@ def eval_run(req: EvalRunRequest, _: None = Depends(require_api_key)) -> dict[st
 
 
 @app.post("/v1/eval/compare")
-def eval_compare(req: CompareRequest, _: None = Depends(require_api_key)) -> dict[str, Any]:
+def eval_compare(req: CompareRequest) -> dict[str, Any]:
     path = Path(req.golden_path)
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"Golden file not found: {path}")
