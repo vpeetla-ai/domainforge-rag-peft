@@ -115,6 +115,8 @@ cd ui && NEXT_PUBLIC_API_URL=http://localhost:8090 npm run dev
 | API (Render) | [domainforge-api.onrender.com](https://domainforge-api.onrender.com) — cold start ~30s |
 | UI (Vercel) | `ui/` static export · `NEXT_PUBLIC_API_URL` |
 
+> **First-run note:** The Render API sleeps after inactivity on the free tier. The first request takes ~30s to wake. The UI surfaces a "waking API" state and falls back to a template baseline if the API is unreachable.
+
 ## Stack fit
 
 **Layer:** Knowledge + MLOps (Pillar 4 fine-tuning + Pillar 1 RAG facts) · Pairs with [Enterprise RAG](https://github.com/vpeetla-ai/enterprise_rag_platform), [vLLM Lab](https://github.com/vpeetla-ai/vllm-architecture-lab), [VoiceForge](https://github.com/vpeetla-ai/voiceforge-assistant).

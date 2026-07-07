@@ -39,6 +39,22 @@ function prettyJson(raw: string) {
   }
 }
 
+const WAKE_HINT =
+  'The demo API is on Render free tier and may be waking up (~30s after idle). Wait a moment and try again.';
+
+// A failed fetch to a sleeping Render service surfaces as a TypeError ("Failed to
+// fetch") rather than an HTTP error. Translate that into a friendly cold-start hint.
+async function fetchJson(input: string, init?: RequestInit) {
+  let resp: Response;
+  try {
+    resp = await fetch(input, init);
+  } catch {
+    throw new Error(WAKE_HINT);
+  }
+  if (!resp.ok) throw new Error((await resp.text()) || WAKE_HINT);
+  return resp.json();
+}
+
 export default function HomePage() {
   const [message, setMessage] = useState('Where is my order? I need tracking.');
   const [solution, setSolution] = useState('s1_naive_rag');
@@ -59,13 +75,12 @@ export default function HomePage() {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`${API_URL}/v1/query`, {
+      const data = await fetchJson(`${API_URL}/v1/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, solution }),
       });
-      if (!resp.ok) throw new Error(await resp.text());
-      setResult(await resp.json());
+      setResult(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Query failed');
     } finally {
@@ -77,7 +92,7 @@ export default function HomePage() {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`${API_URL}/v1/eval/compare`, {
+      const data = await fetchJson(`${API_URL}/v1/eval/compare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -85,8 +100,7 @@ export default function HomePage() {
           solutions,
         }),
       });
-      if (!resp.ok) throw new Error(await resp.text());
-      setCompare(await resp.json());
+      setCompare(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Compare failed');
     } finally {
@@ -98,9 +112,7 @@ export default function HomePage() {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`${API_URL}/v1/preferences/samples?limit=4`);
-      if (!resp.ok) throw new Error(await resp.text());
-      const data = await resp.json();
+      const data = await fetchJson(`${API_URL}/v1/preferences/samples?limit=4`);
       setPreferences(data.pairs);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Preferences failed');
