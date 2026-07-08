@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { ArchitectOverview } from '../components/ArchitectOverview';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
 
@@ -130,6 +131,26 @@ export default function HomePage() {
           RAG facts · SFT schema · DPO alignment — compare solutions S0 through S4 on the same
           customer message.
         </p>
+      </div>
+
+      <div className="panel" style={{ marginBottom: '1rem' }}>
+        <ArchitectOverview
+          tagline="Domain adaptation ladder: baseline → naive RAG → hybrid → SFT → DPO. Each step is a deliberate tradeoff between format compliance and retrieval grounding."
+          layers={[
+            { tier: 'L1', name: 'Demo UI', role: 'Solution compare', components: ['S0–S4 picker', 'Eval harness', 'Preference viewer'] },
+            { tier: 'L2', name: 'RAG + adapters', role: 'Grounded triage', components: ['Chroma index', 'Intent router', 'PEFT adapters'] },
+            { tier: 'L3', name: 'Training', role: 'Alignment path', components: ['SFT schema', 'DPO pairs', 'Adapter registry'] },
+            { tier: 'L4', name: 'Ops', role: 'Corpus + eval proof', components: ['Golden eval CI', '/v1/ops/metrics', 'Security scan'] },
+          ]}
+          tradeoffs={[
+            { decision: 'S0→S4 ladder vs single best model', gain: 'Interview-ready tradeoff narrative', trade: 'More moving parts to explain' },
+            { decision: 'File-based corpus on Render', gain: 'No vector DB bill for demos', trade: 'Cold start rebuilds index' },
+            { decision: 'DPO on preference pairs', gain: 'Repairs format without full retrain', trade: 'Needs curated reject examples' },
+            { decision: 'Mock LLM default', gain: 'Stable public demo', trade: 'Latency/quality ≠ prod inference' },
+          ]}
+          metricsUrl={`${API_URL}/v1/ops/metrics`}
+          metricLabels={{ runs: 'Corpus chunks', entities: 'Preference pairs', latency: 'P95 latency' }}
+        />
       </div>
 
       <div className="panel">
