@@ -219,6 +219,15 @@ export default function HomePage() {
           ]}
           metricsUrl={`${API_URL}/v1/ops/metrics`}
           metricLabels={{ runs: 'Corpus chunks', entities: 'Preference pairs', latency: 'P95 latency' }}
+          eagleEyeNote="Knowledge + MLOps layer — complements Enterprise RAG retrieval with domain format adaptation."
+          adrLinks={[
+            { title: 'ADR-019 — DomainForge PEFT ladder', href: 'https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-019-domainforge-peft-rag-ladder.md' },
+            { title: 'ADR-022 — Multi-LoRA serving target', href: 'https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-022-domainforge-vllm-multi-lora-serving.md' },
+          ]}
+          docsLinks={[
+            { title: 'Architecture', href: 'https://github.com/vpeetla-ai/domainforge-rag-peft/blob/main/docs/ARCHITECTURE.md' },
+            { title: 'SLO targets', href: 'https://github.com/vpeetla-ai/domainforge-rag-peft/blob/main/docs/SLO.md' },
+          ]}
         />
       }
     />
