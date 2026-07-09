@@ -126,6 +126,9 @@ export default function HomePage() {
       productPanel={
         <>
           <div className="panel">
+            <p className="muted" style={{ margin: '0 0 0.75rem', fontSize: '0.85rem' }}>
+              <strong>1.</strong> Pick a ladder step → <strong>2.</strong> Run query → <strong>3.</strong> Optionally compare eval ladder or DPO pairs.
+            </p>
             <label htmlFor="message">Customer message</label>
             <textarea id="message" rows={4} value={message} onChange={(e) => setMessage(e.target.value)} />
             <div className="row" style={{ marginTop: '0.75rem' }}>
@@ -139,13 +142,28 @@ export default function HomePage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'end', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <button onClick={runQuery} disabled={loading}>{loading ? 'Running…' : 'Run query'}</button>
+              </div>
+            </div>
+            <details style={{ marginTop: '0.85rem' }}>
+              <summary style={{ cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: 'var(--vp-text-secondary)' }}>
+                Eval tools (compare ladder · preference pairs)
+              </summary>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.65rem' }}>
                 <button className="secondary" onClick={() => runCompare()} disabled={loading}>Compare S0–S2</button>
                 <button className="secondary" onClick={() => runCompare(['s3_peft_hybrid', 's4_dpo_peft'])} disabled={loading}>Compare S3 vs S4</button>
                 <button className="secondary" onClick={loadPreferences} disabled={loading}>View preference pairs</button>
               </div>
-            </div>
+            </details>
             {error && <p className="alert alert-error">{error}</p>}
           </div>
+
+          {!result && !compare && !preferences && !loading && !error && (
+            <div className="panel" style={{ borderStyle: 'dashed' }}>
+              <p style={{ margin: 0, color: 'var(--vp-text-secondary)', fontSize: '0.9rem' }}>
+                Results appear here after you run a query — intent, retrieved chunks, and triage JSON for the selected S0–S4 step.
+              </p>
+            </div>
+          )}
 
           {result && (
             <div className="panel">

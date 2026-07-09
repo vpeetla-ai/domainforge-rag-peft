@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type OpsMetrics = {
   service: string;
@@ -48,6 +48,8 @@ type Props = {
   docsLinks?: AdrLink[];
 };
 
+type MetricsState = "loading" | "live" | "failed";
+
 export function ArchitectOverview({
   tagline,
   layers,
@@ -59,13 +61,25 @@ export function ArchitectOverview({
   docsLinks,
 }: Props) {
   const [metrics, setMetrics] = useState<OpsMetrics | null>(null);
+  const [metricsState, setMetricsState] = useState<MetricsState>("loading");
+
+  const loadMetrics = useCallback(() => {
+    setMetricsState("loading");
+    fetch(metricsUrl, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((data) => {
+        setMetrics(normalizeMetrics(data));
+        setMetricsState("live");
+      })
+      .catch(() => {
+        setMetrics(null);
+        setMetricsState("failed");
+      });
+  }, [metricsUrl]);
 
   useEffect(() => {
-    fetch(metricsUrl, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => data && setMetrics(normalizeMetrics(data)))
-      .catch(() => null);
-  }, [metricsUrl]);
+    loadMetrics();
+  }, [loadMetrics]);
 
   const labels = {
     runs: metricLabels?.runs ?? "Total runs",
@@ -73,82 +87,73 @@ export function ArchitectOverview({
     latency: metricLabels?.latency ?? "P95 latency",
   };
 
+  const hasDocs = Boolean(adrLinks?.length || docsLinks?.length);
+
   return (
-    <div className="space-y-10">
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <SectionLabel>Eagle-eye architecture</SectionLabel>
-        <h2 className="text-lg font-semibold text-slate-900">How the system is wired</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">{tagline}</p>
-        {eagleEyeNote ? <p className="mt-3 text-sm font-medium text-blue-700">{eagleEyeNote}</p> : null}
-        <div className="mt-6 grid gap-3">
-          {layers.map((layer) => (
-            <div
-              key={layer.name}
-              className="grid items-start gap-3 rounded-lg border border-slate-100 bg-slate-50/80 p-4 md:grid-cols-[72px_160px_1fr]"
-            >
-              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-blue-700">{layer.tier}</span>
-              <div>
-                <p className="font-semibold text-slate-900">{layer.name}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{layer.role}</p>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {layer.components.map((c) => (
-                  <span
-                    key={c}
-                    className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-600"
-                  >
-                    {c}
-                  </span>
-                ))}
-              </div>
+    <div className="architect-overview">
+      <nav className="ao-jump" aria-label="Architecture sections">
+        <a href="#ao-stack">Stack</a>
+        <a href="#ao-tradeoffs">Tradeoffs</a>
+        {hasDocs ? <a href="#ao-adrs">ADRs</a> : null}
+        <a href="#ao-metrics">Metrics</a>
+      </nav>
+
+      <section id="ao-stack" className="architect-section">
+        <p className="ao-eyebrow">Eagle-eye architecture</p>
+        <h2 className="ao-title">How the system is wired</h2>
+        <p className="ao-lede">{tagline}</p>
+        {eagleEyeNote ? <p className="ao-note">{eagleEyeNote}</p> : null}
+        {layers.map((layer) => (
+          <div key={layer.name} className="architect-layer">
+            <span className="architect-tier">{layer.tier}</span>
+            <div>
+              <strong className="ao-layer-name">{layer.name}</strong>
+              <p className="ao-layer-role">{layer.role}</p>
             </div>
-          ))}
-        </div>
+            <div className="architect-chips">
+              {layer.components.map((c) => (
+                <span key={c} className="architect-chip">
+                  {c}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <SectionLabel>Principal tradeoffs</SectionLabel>
-        <h2 className="text-lg font-semibold text-slate-900">Decisions with explicit costs</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
+      <section id="ao-tradeoffs" className="architect-section">
+        <p className="ao-eyebrow">Principal tradeoffs</p>
+        <h2 className="ao-title">Decisions with explicit costs</h2>
+        <div className="architect-tradeoffs">
           {tradeoffs.map((t) => (
-            <div key={t.decision} className="rounded-lg border border-slate-100 bg-slate-50/50 p-4">
-              <p className="font-semibold text-slate-900">{t.decision}</p>
-              <p className="mt-2 text-sm text-slate-600">
-                <span className="font-semibold text-emerald-700">Gain</span> — {t.gain}
+            <div key={t.decision} className="architect-tradeoff">
+              <strong className="ao-trade-title">{t.decision}</strong>
+              <p>
+                <span className="gain">Gain</span> — {t.gain}
               </p>
-              <p className="mt-1 text-sm text-slate-600">
-                <span className="font-semibold text-amber-700">Trade</span> — {t.trade}
+              <p>
+                <span className="trade">Trade</span> — {t.trade}
               </p>
             </div>
           ))}
         </div>
       </section>
 
-      {adrLinks?.length || docsLinks?.length ? (
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <SectionLabel>Architecture record</SectionLabel>
-          <h2 className="text-lg font-semibold text-slate-900">ADRs, case studies, and SLOs</h2>
-          <ul className="mt-4 space-y-2">
+      {hasDocs ? (
+        <section id="ao-adrs" className="architect-section">
+          <p className="ao-eyebrow">Architecture record</p>
+          <h2 className="ao-title">ADRs, case studies, and SLOs</h2>
+          <ul className="ao-doc-links">
             {adrLinks?.map((link) => (
               <li key={link.href}>
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-700"
-                >
+                <a href={link.href} target="_blank" rel="noopener noreferrer">
                   {link.title} →
                 </a>
               </li>
             ))}
             {docsLinks?.map((link) => (
               <li key={link.href}>
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-slate-600 hover:text-slate-900"
-                >
+                <a href={link.href} target="_blank" rel="noopener noreferrer">
                   {link.title} →
                 </a>
               </li>
@@ -157,44 +162,45 @@ export function ArchitectOverview({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <SectionLabel>Production metrics</SectionLabel>
-        <h2 className="text-lg font-semibold text-slate-900">Live operational proof</h2>
-        {metrics ? (
+      <section id="ao-metrics" className="architect-section">
+        <p className="ao-eyebrow">Production metrics</p>
+        <h2 className="ao-title">Live operational proof</h2>
+        {metricsState === "live" && metrics ? (
           <>
-            <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
-              <MetricCard label={labels.runs} value={String(metrics.total_runs)} />
-              <MetricCard label="Success rate" value={`${metrics.success_rate_pct}%`} />
-              <MetricCard
-                label={labels.latency}
-                value={metrics.p95_latency_ms != null ? `${metrics.p95_latency_ms}ms` : "—"}
-              />
-              <MetricCard label={labels.entities} value={String(metrics.active_entities)} />
+            <div className="architect-metrics">
+              <div className="architect-metric">
+                <span>{labels.runs}</span>
+                <strong>{metrics.total_runs}</strong>
+              </div>
+              <div className="architect-metric">
+                <span>Success rate</span>
+                <strong>{metrics.success_rate_pct}%</strong>
+              </div>
+              <div className="architect-metric">
+                <span>{labels.latency}</span>
+                <strong>{metrics.p95_latency_ms != null ? `${metrics.p95_latency_ms}ms` : "—"}</strong>
+              </div>
+              <div className="architect-metric">
+                <span>{labels.entities}</span>
+                <strong>{metrics.active_entities}</strong>
+              </div>
             </div>
-            <p className="mt-4 font-mono text-xs text-slate-500">
+            <p className="muted api-hint">
               {metricsUrl.replace(/^https?:\/\/[^/]+/, "")} · SLO {metrics.slo.success_target_pct}% success ·{" "}
               {metrics.slo.target_uptime_pct}% uptime target
             </p>
           </>
+        ) : metricsState === "loading" ? (
+          <p className="muted">Loading live metrics…</p>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">Loading metrics or API is waking from idle…</p>
+          <div className="ao-metrics-failed">
+            <p className="muted">Metrics unavailable — API may be waking from idle (~30s).</p>
+            <button type="button" className="secondary" onClick={loadMetrics}>
+              Retry
+            </button>
+          </div>
         )}
       </section>
-    </div>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-500">{children}</p>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{value}</p>
     </div>
   );
 }

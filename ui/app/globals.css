@@ -586,26 +586,58 @@ pre.rejected { border-color: rgba(220, 38, 38, 0.35); background: var(--vp-dange
 h3 { margin: 0 0 0.75rem; font-size: 0.95rem; font-weight: 600; }
 
 /* ArchitectOverview (shared principal landing) */
-.architect-overview { display: grid; gap: 2rem; }
+.architect-overview { display: grid; gap: 1.5rem; }
+.ao-jump {
+  position: sticky;
+  top: calc(var(--vp-header-h) + 0.5rem);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--vp-border);
+  border-radius: var(--vp-radius-sm);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--vp-shadow);
+}
+.ao-jump a {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--vp-text-secondary);
+  text-decoration: none;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+}
+.ao-jump a:hover { background: var(--vp-bg-subtle); color: var(--vp-text); }
+.architect-section { scroll-margin-top: 6rem; }
 .architect-overview .ao-eyebrow { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
-.architect-overview h2 { margin: 0 0 0.75rem; font-size: 1.35rem; }
+.architect-overview h2,
+.architect-overview .ao-title { margin: 0 0 0.75rem; font-size: 1.15rem; font-weight: 600; color: var(--vp-text); }
 .architect-overview .ao-lede { color: var(--vp-text-secondary); margin: 0 0 1rem; max-width: 48rem; }
 .architect-overview .ao-note { color: var(--accent); font-size: 0.9rem; margin-bottom: 1rem; }
 .architect-layer { display: grid; gap: 0.5rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--vp-radius); background: var(--panel); margin-bottom: 0.5rem; }
 @media (min-width: 768px) { .architect-layer { grid-template-columns: 72px 140px 1fr; align-items: start; } }
 .architect-tier { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
 .architect-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.architect-chip { font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 6px; border: 1px solid var(--border); color: var(--muted); }
+.architect-chip { font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 6px; border: 1px solid var(--border); color: var(--muted); background: var(--vp-surface); }
 .architect-tradeoffs { display: grid; gap: 0.75rem; }
 @media (min-width: 768px) { .architect-tradeoffs { grid-template-columns: 1fr 1fr; } }
 .architect-tradeoff { padding: 1rem; border-radius: var(--vp-radius); border: 1px solid var(--border); background: var(--panel); }
 .architect-tradeoff .gain { color: var(--vp-success); font-weight: 600; }
 .architect-tradeoff .trade { color: var(--vp-warning); font-weight: 600; }
-.architect-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+.architect-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 0.75rem; }
 @media (min-width: 768px) { .architect-metrics { grid-template-columns: repeat(4, 1fr); } }
-.architect-metric { padding: 1rem; border-radius: var(--vp-radius); border: 1px solid var(--border); background: var(--panel); }
-.architect-metric strong { font-size: 1.5rem; display: block; margin-top: 0.25rem; }
+.architect-metric { padding: 1rem; border-radius: var(--vp-radius); border: 1px solid var(--border); background: var(--panel); display: flex; flex-direction: column; gap: 0.35rem; }
+.architect-metric strong { font-size: 1.5rem; display: block; font-weight: 600; color: var(--vp-text); }
 .architect-metric span { font-size: 0.75rem; color: var(--vp-text-muted); }
+.ao-doc-links { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.45rem; }
+.ao-doc-links a { font-size: 0.9rem; font-weight: 500; color: var(--vp-accent); text-decoration: none; }
+.ao-doc-links a:hover { text-decoration: underline; }
+.ao-metrics-failed { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
+.ao-layer-name { color: var(--vp-text); }
+.ao-layer-role { font-size: 0.8rem; color: var(--vp-text-muted); margin: 0.15rem 0 0; }
+.ao-trade-title { color: var(--vp-text); display: block; margin-bottom: 0.35rem; }
 
 /* Product workbench tabs */
 .workbench { margin: 0 auto; max-width: var(--vp-max-w); }
