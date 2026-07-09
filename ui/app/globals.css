@@ -602,6 +602,32 @@ h3 { margin: 0 0 0.75rem; font-size: 0.95rem; font-weight: 600; }
 @media (min-width: 768px) { .architect-metrics { grid-template-columns: repeat(4, 1fr); } }
 .architect-metric { padding: 1rem; border-radius: var(--vp-radius); border: 1px solid var(--border); background: var(--panel); }
 .architect-metric strong { font-size: 1.5rem; display: block; margin-top: 0.25rem; }
-.architect-metric span { font-size: 0.75rem; color: var(--muted); }
+.architect-metric span { font-size: 0.75rem; color: var(--vp-text-muted); }
+
+/* Product workbench tabs */
+.workbench { margin: 0 auto; max-width: var(--vp-max-w); }
+.workbench-hero { margin-bottom: 1.25rem; }
+.workbench-hero__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.workbench-eyebrow { margin: 0; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--vp-text-muted); }
+.workbench-title { margin: 0.25rem 0 0; font-size: 1.35rem; font-weight: 600; letter-spacing: -0.02em; color: var(--vp-text); }
+.workbench-subtitle { margin: 0.5rem 0 0; max-width: 42rem; font-size: 0.9rem; line-height: 1.55; color: var(--vp-text-secondary); }
+.workbench-tabs { display: flex; gap: 0.35rem; margin-top: 1.25rem; border-bottom: 1px solid var(--vp-border); }
+.workbench-tab {
+  position: relative; margin-bottom: -1px; padding: 0.65rem 1rem 0.75rem; border: 1px solid transparent;
+  border-radius: 10px 10px 0 0; background: transparent; cursor: pointer; text-align: left;
+}
+.workbench-tab.is-active { background: var(--vp-surface); border-color: var(--vp-border); border-bottom-color: var(--vp-surface); }
+.workbench-tab__label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--vp-text); }
+.workbench-tab:not(.is-active) .workbench-tab__label { color: var(--vp-text-secondary); }
+.workbench-tab__hint { display: block; font-size: 0.65rem; color: var(--vp-text-muted); margin-top: 0.1rem; }
+.workbench-tab.is-active::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--vp-accent);
+}
+.workbench-body { display: grid; gap: 1rem; }
+.ao-title { margin: 0 0 0.5rem; font-size: 1.1rem; font-weight: 600; color: var(--vp-text); }
+.ao-layer-name { color: var(--vp-text); }
+.ao-layer-role { font-size: 0.8rem; color: var(--vp-text-muted); }
+.ao-trade-title { color: var(--vp-text); display: block; margin-bottom: 0.35rem; }
+.architect-section { margin-bottom: 0; }
 
 a { color: var(--vp-accent); }

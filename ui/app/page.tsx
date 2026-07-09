@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { ArchitectOverview } from '../components/ArchitectOverview';
+import { ProductWorkbench } from '../components/ProductWorkbench';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
 
@@ -43,8 +44,6 @@ function prettyJson(raw: string) {
 const WAKE_HINT =
   'The demo API is on Render free tier and may be waking up (~30s after idle). Wait a moment and try again.';
 
-// A failed fetch to a sleeping Render service surfaces as a TypeError ("Failed to
-// fetch") rather than an HTTP error. Translate that into a friendly cold-start hint.
 async function fetchJson(input: string, init?: RequestInit) {
   let resp: Response;
   try {
@@ -96,10 +95,7 @@ export default function HomePage() {
       const data = await fetchJson(`${API_URL}/v1/eval/compare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          golden_path: 'data/eval_golden/sample.jsonl',
-          solutions,
-        }),
+        body: JSON.stringify({ golden_path: 'data/eval_golden/sample.jsonl', solutions }),
       });
       setCompare(data);
     } catch (e) {
@@ -123,147 +119,108 @@ export default function HomePage() {
   }
 
   return (
-    <>
-      <div className="page-hero">
-        <p className="eyebrow">Support triage pipeline</p>
-        <h1>DomainForge</h1>
-        <p className="subtitle">
-          RAG facts · SFT schema · DPO alignment — compare solutions S0 through S4 on the same
-          customer message.
-        </p>
-      </div>
+    <ProductWorkbench
+      eyebrow="Support triage · RAG + PEFT"
+      productName="DomainForge"
+      subtitle="Compare S0→S4 on the same customer message — RAG for facts, adapters for JSON schema discipline."
+      productPanel={
+        <>
+          <div className="panel">
+            <label htmlFor="message">Customer message</label>
+            <textarea id="message" rows={4} value={message} onChange={(e) => setMessage(e.target.value)} />
+            <div className="row" style={{ marginTop: '0.75rem' }}>
+              <div>
+                <label htmlFor="solution">Solution</label>
+                <select id="solution" value={solution} onChange={(e) => setSolution(e.target.value)}>
+                  {SOLUTIONS.map((s) => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'end', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button onClick={runQuery} disabled={loading}>{loading ? 'Running…' : 'Run query'}</button>
+                <button className="secondary" onClick={() => runCompare()} disabled={loading}>Compare S0–S2</button>
+                <button className="secondary" onClick={() => runCompare(['s3_peft_hybrid', 's4_dpo_peft'])} disabled={loading}>Compare S3 vs S4</button>
+                <button className="secondary" onClick={loadPreferences} disabled={loading}>View preference pairs</button>
+              </div>
+            </div>
+            {error && <p className="alert alert-error">{error}</p>}
+          </div>
 
-      <div className="panel" style={{ marginBottom: '1rem' }}>
+          {result && (
+            <div className="panel">
+              <div>
+                <span className="chip">{result.solution}</span>
+                <span className="chip">intent: {result.detected_intent}</span>
+                <span className="chip">backend: {result.inference_backend}</span>
+              </div>
+              <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Retrieved chunks: {result.chunk_ids.join(', ') || 'none'}</p>
+              <pre>{parsedTriage}</pre>
+            </div>
+          )}
+
+          {compare && (
+            <div className="panel">
+              <h3 style={{ marginTop: 0 }}>Eval compare (golden sample)</h3>
+              {winRate !== undefined && <p className="chip">S4 preference win-rate vs S3: {winRate}%</p>}
+              <table className="compare-table">
+                <thead>
+                  <tr><th>Solution</th><th>Format %</th><th>Intent %</th><th>Hallucination %</th></tr>
+                </thead>
+                <tbody>
+                  {Object.entries(compare)
+                    .filter(([key]) => !key.includes('preference_win_rate'))
+                    .map(([key, row]) => (
+                      <tr key={key}>
+                        <td>{key}</td>
+                        <td>{row.format_adherence_pct}</td>
+                        <td>{row.intent_accuracy_pct}</td>
+                        <td>{row.hallucination_freq_pct}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {preferences && (
+            <div className="panel">
+              <h3 style={{ marginTop: 0 }}>DPO preference pairs (chosen vs rejected)</h3>
+              {preferences.map((pair, idx) => (
+                <div key={`${pair.instruction}-${idx}`} className="pref-card">
+                  <p><strong>{pair.instruction}</strong></p>
+                  <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
+                    gold intent: {pair.gold_intent} · reject reason: {pair.reject_reason}
+                  </p>
+                  <div className="pref-grid">
+                    <div><h4>Chosen ✓</h4><pre>{prettyJson(pair.chosen)}</pre></div>
+                    <div><h4>Rejected ✗</h4><pre className="rejected">{prettyJson(pair.rejected)}</pre></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      }
+      architecturePanel={
         <ArchitectOverview
-          tagline="Domain adaptation ladder: baseline → naive RAG → hybrid → SFT → DPO. Each step is a deliberate tradeoff between format compliance and retrieval grounding."
+          tagline="Domain adaptation ladder: baseline → naive RAG → hybrid → SFT → DPO. Each step trades complexity for format compliance and grounding."
           layers={[
-            { tier: 'L1', name: 'Demo UI', role: 'Solution compare', components: ['S0–S4 picker', 'Eval harness', 'Preference viewer'] },
-            { tier: 'L2', name: 'RAG + adapters', role: 'Grounded triage', components: ['Chroma index', 'Intent router', 'PEFT adapters'] },
-            { tier: 'L3', name: 'Training', role: 'Alignment path', components: ['SFT schema', 'DPO pairs', 'Adapter registry'] },
-            { tier: 'L4', name: 'Ops', role: 'Corpus + eval proof', components: ['Golden eval CI', '/v1/ops/metrics', 'Security scan'] },
+            { tier: 'L1', name: 'Workbench', role: 'Solution compare UI', components: ['S0–S4 picker', 'Eval harness', 'DPO pairs'] },
+            { tier: 'L2', name: 'RAG + adapters', role: 'Grounded triage', components: ['Chroma', 'Intent router', 'PEFT registry'] },
+            { tier: 'L3', name: 'Training', role: 'Alignment path', components: ['SFT schema', 'DPO pairs', 'Golden eval'] },
+            { tier: 'L4', name: 'Ops', role: 'Corpus proof', components: ['/v1/ops/metrics', 'Security scan', 'SLO'] },
           ]}
           tradeoffs={[
-            { decision: 'S0→S4 ladder vs single best model', gain: 'Interview-ready tradeoff narrative', trade: 'More moving parts to explain' },
+            { decision: 'S0→S4 ladder', gain: 'Interview-ready tradeoff narrative per stage', trade: 'More surfaces to maintain than one model' },
             { decision: 'File-based corpus on Render', gain: 'No vector DB bill for demos', trade: 'Cold start rebuilds index' },
             { decision: 'DPO on preference pairs', gain: 'Repairs format without full retrain', trade: 'Needs curated reject examples' },
-            { decision: 'Mock LLM default', gain: 'Stable public demo', trade: 'Latency/quality ≠ prod inference' },
+            { decision: 'Mock LLM default', gain: 'Stable public demo', trade: 'Latency/quality ≠ production inference' },
           ]}
           metricsUrl={`${API_URL}/v1/ops/metrics`}
           metricLabels={{ runs: 'Corpus chunks', entities: 'Preference pairs', latency: 'P95 latency' }}
         />
-      </div>
-
-      <div className="panel">
-        <label htmlFor="message">Customer message</label>
-        <textarea
-          id="message"
-          rows={4}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <div className="row" style={{ marginTop: '0.75rem' }}>
-          <div>
-            <label htmlFor="solution">Solution</label>
-            <select id="solution" value={solution} onChange={(e) => setSolution(e.target.value)}>
-              {SOLUTIONS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'end', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <button onClick={runQuery} disabled={loading}>
-              {loading ? 'Running…' : 'Run query'}
-            </button>
-            <button className="secondary" onClick={() => runCompare()} disabled={loading}>
-              Compare S0–S2
-            </button>
-            <button
-              className="secondary"
-              onClick={() => runCompare(['s3_peft_hybrid', 's4_dpo_peft'])}
-              disabled={loading}
-            >
-              Compare S3 vs S4
-            </button>
-            <button className="secondary" onClick={loadPreferences} disabled={loading}>
-              View preference pairs
-            </button>
-          </div>
-        </div>
-        {error && <p className="alert alert-error">{error}</p>}
-      </div>
-
-      {result && (
-        <div className="panel">
-          <div>
-            <span className="chip">{result.solution}</span>
-            <span className="chip">intent: {result.detected_intent}</span>
-            <span className="chip">backend: {result.inference_backend}</span>
-          </div>
-          <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-            Retrieved chunks: {result.chunk_ids.join(', ') || 'none'}
-          </p>
-          <pre>{parsedTriage}</pre>
-        </div>
-      )}
-
-      {compare && (
-        <div className="panel">
-          <h3 style={{ marginTop: 0 }}>Eval compare (golden sample)</h3>
-          {winRate !== undefined && (
-            <p className="chip">S4 preference win-rate vs S3: {winRate}%</p>
-          )}
-          <table className="compare-table">
-            <thead>
-              <tr>
-                <th>Solution</th>
-                <th>Format %</th>
-                <th>Intent %</th>
-                <th>Hallucination %</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(compare)
-                .filter(([key]) => !key.includes('preference_win_rate'))
-                .map(([key, row]) => (
-                  <tr key={key}>
-                    <td>{key}</td>
-                    <td>{row.format_adherence_pct}</td>
-                    <td>{row.intent_accuracy_pct}</td>
-                    <td>{row.hallucination_freq_pct}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {preferences && (
-        <div className="panel">
-          <h3 style={{ marginTop: 0 }}>DPO preference pairs (chosen vs rejected)</h3>
-          {preferences.map((pair, idx) => (
-            <div key={`${pair.instruction}-${idx}`} className="pref-card">
-              <p>
-                <strong>{pair.instruction}</strong>
-              </p>
-              <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-                gold intent: {pair.gold_intent} · reject reason: {pair.reject_reason}
-              </p>
-              <div className="pref-grid">
-                <div>
-                  <h4>Chosen ✓</h4>
-                  <pre>{prettyJson(pair.chosen)}</pre>
-                </div>
-                <div>
-                  <h4>Rejected ✗</h4>
-                  <pre className="rejected">{prettyJson(pair.rejected)}</pre>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
+      }
+    />
   );
 }
