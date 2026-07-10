@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     ollama_model: str = "mistral"
     ollama_adapter_model: str = "domainforge-triage"
     ollama_dpo_adapter_model: str = "domainforge-triage-dpo"
+    # ADR-022 Path B — educational multi-LoRA via vLLM Architecture Lab
+    vllm_base_url: str = ""
+    vllm_adapter_model: str = "domainforge-triage-v0"
+    vllm_dpo_adapter_model: str = "domainforge-triage-dpo-v0"
     preferences_dir: Path = Path("data/preferences")
     adapter_registry_path: Path = Path("adapters/registry.json")
     cors_origins: str = "http://localhost:3000,https://domainforge-rag-peft.vercel.app"

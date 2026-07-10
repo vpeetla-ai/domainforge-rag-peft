@@ -8,6 +8,7 @@ from domainforge.generation.baseline import generate_triage_json
 from domainforge.prep.chatml import SYSTEM_PROMPT
 from domainforge.rag.naive import RetrievedChunk, format_context_blocks
 from domainforge.serve.ollama import generate_with_ollama, ollama_available
+from domainforge.serve.vllm import generate_with_vllm, vllm_available
 
 
 def build_user_prompt(message: str, context_blocks: list[str]) -> str:
@@ -23,19 +24,39 @@ def generate_triage(
     intent_hint: str | None = None,
 ) -> tuple[str, str]:
     """
-    Returns (triage_json, backend) where backend is baseline|ollama.
+    Returns (triage_json, backend) where backend is baseline|ollama|vllm.
     """
     blocks = format_context_blocks(retrieved)
     user_prompt = build_user_prompt(message, blocks)
 
+    peft_solutions = (
+        SolutionId.S2_HYBRID_RAG,
+        SolutionId.S3_PEFT_HYBRID,
+        SolutionId.S4_DPO_PEFT,
+    )
+
+    # Path B (ADR-022): educational multi-LoRA via vLLM Lab when VLLM_BASE_URL is set.
     if (
         not settings.mock_llm
-        and solution
-        in (
-            SolutionId.S2_HYBRID_RAG,
-            SolutionId.S3_PEFT_HYBRID,
-            SolutionId.S4_DPO_PEFT,
-        )
+        and solution in peft_solutions
+        and settings.vllm_base_url
+        and vllm_available(settings.vllm_base_url)
+    ):
+        try:
+            if solution == SolutionId.S4_DPO_PEFT:
+                model = settings.vllm_dpo_adapter_model
+            elif solution == SolutionId.S3_PEFT_HYBRID:
+                model = settings.vllm_adapter_model
+            else:
+                model = settings.vllm_adapter_model
+            triage = generate_with_vllm(user_prompt, settings.vllm_base_url, model)
+            return triage, "vllm"
+        except Exception:
+            pass
+
+    if (
+        not settings.mock_llm
+        and solution in peft_solutions
         and ollama_available(settings.ollama_base_url)
     ):
         try:

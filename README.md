@@ -79,7 +79,7 @@ flowchart TB
 | Ollama bench UI | ✅ | `/bench` route |
 | Golden eval CI gate | ✅ | `domainforge.triage_preference_v1` |
 | Full Mistral QLoRA on GPU | 🟡 | `scripts/gpu_pipeline.sh` — user RunPod |
-| vLLM multi-LoRA serve | ⬜ Planned | [ADR-022](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-022-domainforge-vllm-multi-lora-serving.md) |
+| vLLM multi-LoRA serve | 🟡 Educational Path B | OpenAI-compatible `/v1/chat/completions` via `VLLM_BASE_URL` → [vLLM Lab](https://github.com/vpeetla-ai/vllm-architecture-lab); not CUDA multi-LoRA ([ADR-022](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-022-domainforge-vllm-multi-lora-serving.md)) |
 
 ## Quick start
 
