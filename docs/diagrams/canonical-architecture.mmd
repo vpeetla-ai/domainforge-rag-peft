@@ -23,11 +23,11 @@ flowchart TB
   subgraph serve["Inference paths"]
     MOCK["Mock LLM<br/>Render free tier"]
     OLLAMA["Ollama<br/>GPU host"]
-    VLLM["vLLM multi-LoRA<br/>planned — ADR-022"]
+    VLLM["vLLM Lab Path B<br/>educational — ADR-022"]
   end
 
   API --> MOCK
   API --> OLLAMA
-  API -.-> VLLM
+  API -.->|"VLLM_BASE_URL"| VLLM
 
   UI["Next.js demo UI<br/>+ /bench Ollama metrics"] --> API
