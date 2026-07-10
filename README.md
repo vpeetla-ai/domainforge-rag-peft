@@ -119,6 +119,20 @@ cd ui && NEXT_PUBLIC_API_URL=http://localhost:8090 npm run dev
 
 > **First-run note:** The Render API sleeps after inactivity on the free tier. The first request takes ~30s to wake. The UI surfaces a "waking API" state and falls back to a template baseline if the API is unreachable.
 
+## Interview map
+
+**Business function:** RAG for facts + PEFT for behavior — customer-support triage with grounded citations and schema reliability.
+
+Staff+ prep crosswalk — [playbook](https://github.com/vpeetla-ai/ai-architect-interview-playbook) · [study UI](https://ai-architect-interview-playbook-9xs.vercel.app) · [Practice Arena](https://ai-architect-practice-arena.vercel.app) · [org matrix](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/docs/REPO_INTERVIEW_MAP.md). Only entries this repo honestly exercises.
+
+| Category | Entry | Fit |
+|----------|-------|-----|
+| System design | [RAG platform at scale](https://ai-architect-interview-playbook-9xs.vercel.app/q/ai-system-design/02-rag-platform-at-scale) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/ai-system-design/02-rag-platform-at-scale.md)) | Grounded SOP retrieval |
+| System design | [LLM customer support assistant](https://ai-architect-interview-playbook-9xs.vercel.app/q/ai-system-design/16-llm-customer-support-assistant) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/ai-system-design/16-llm-customer-support-assistant.md)) | Triage / routing product shape |
+| System design | [Fine-tuning / RLHF pipeline](https://ai-architect-interview-playbook-9xs.vercel.app/q/ai-system-design/08-finetuning-rlhf-training-pipeline-at-scale) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/ai-system-design/08-finetuning-rlhf-training-pipeline-at-scale.md)) | Partial — PEFT/adapters, not full RLHF plant |
+| System design | [Feature store / fine-tune data](https://ai-architect-interview-playbook-9xs.vercel.app/q/ai-system-design/04-feature-store-finetuning-data-pipeline) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/ai-system-design/04-feature-store-finetuning-data-pipeline.md)) | Partial — adaptation data / eval ladder S0–S4 |
+| Trade-offs | [Build vs train vs fine-tune](https://ai-architect-interview-playbook-9xs.vercel.app/q/scalability-governance-tradeoffs/04-build-vs-train-vs-finetune-foundation-model-strategy) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/scalability-governance-tradeoffs/04-build-vs-train-vs-finetune-foundation-model-strategy.md)) | RAG facts vs PEFT behavior (ADR-019) |
+
 ## Stack fit
 
 **Layer:** Knowledge + MLOps (Pillar 4 fine-tuning + Pillar 1 RAG facts) · Pairs with [Enterprise RAG](https://github.com/vpeetla-ai/enterprise_rag_platform), [vLLM Lab](https://github.com/vpeetla-ai/vllm-architecture-lab), [VoiceForge](https://github.com/vpeetla-ai/voiceforge-assistant).
