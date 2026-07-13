@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     vllm_base_url: str = ""
     vllm_adapter_model: str = "domainforge-triage-v0"
     vllm_dpo_adapter_model: str = "domainforge-triage-dpo-v0"
+    # Federated LLM gateway plane (aegis-llm-gateway) — preferred when set
+    llm_gateway_url: str = ""  # e.g. http://127.0.0.1:8100/v1
+    llm_gateway_api_key: str = ""
+    llm_gateway_tenant_id: str = "domainforge-rag-peft"
     preferences_dir: Path = Path("data/preferences")
     adapter_registry_path: Path = Path("adapters/registry.json")
     cors_origins: str = "http://localhost:3000,https://domainforge-rag-peft.vercel.app"

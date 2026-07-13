@@ -249,6 +249,14 @@ def ops_metrics(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
     corpus = metrics(settings)
     pref_train = settings.preferences_dir / "train.jsonl"
     pairs = len(load_jsonl(pref_train)) if pref_train.exists() else 0
+    gateway_on = bool((settings.llm_gateway_url or "").strip())
+    extra = dict(corpus)
+    extra["llm_gateway"] = {
+        "enabled": gateway_on,
+        "url_configured": gateway_on,
+        "tenant_id": settings.llm_gateway_tenant_id if gateway_on else None,
+        "plane": "aegis-llm-gateway",
+    }
     return {
         "service": "domainforge-rag-peft",
         "collected_at": datetime.now(timezone.utc).isoformat(),
@@ -257,5 +265,5 @@ def ops_metrics(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
         "p95_latency_ms": None,
         "active_entities": pairs,
         "slo": {"target_uptime_pct": 99.5, "success_target_pct": 95.0},
-        "extra": corpus,
+        "extra": extra,
     }
