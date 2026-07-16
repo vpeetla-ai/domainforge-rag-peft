@@ -82,7 +82,7 @@ flowchart TB
 | Golden eval CI gate | ✅ | `domainforge.triage_preference_v1` |
 | Full Mistral QLoRA on GPU | 🟡 | `scripts/gpu_pipeline.sh` — user RunPod |
 | vLLM Path B (educational, shipped) | ✅ | OpenAI-compatible `/v1/chat/completions` via `VLLM_BASE_URL` → [vLLM Lab](https://github.com/vpeetla-ai/vllm-architecture-lab); not CUDA multi-LoRA ([ADR-022](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-022-domainforge-vllm-multi-lora-serving.md)) |
-| LLM gateway plane | ✅ | When `LLM_GATEWAY_URL` set — routes via [aegis-llm-gateway](https://github.com/vpeetla-ai/aegis-llm-gateway) before vLLM/Ollama/baseline (ADR-028) |
+| LLM gateway plane | ✅ | When `LLM_GATEWAY_URL` set — DomainForge **selects** cascade; [aegis-llm-gateway](https://github.com/vpeetla-ai/aegis-llm-gateway) **enforces+records** (ADR-028/029) before vLLM/Ollama/baseline |
 
 ## Quick start
 
@@ -133,7 +133,7 @@ Staff+ prep crosswalk — [playbook](https://github.com/vpeetla-ai/ai-architect-
 | System design | [Fine-tuning / RLHF pipeline](https://ai-architect-interview-playbook.vercel.app/q/ai-system-design/08-finetuning-rlhf-training-pipeline-at-scale/) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/ai-system-design/08-finetuning-rlhf-training-pipeline-at-scale.md)) | Partial — PEFT/adapters, not full RLHF plant |
 | System design | [Feature store / fine-tune data](https://ai-architect-interview-playbook.vercel.app/q/ai-system-design/04-feature-store-finetuning-data-pipeline/) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/ai-system-design/04-feature-store-finetuning-data-pipeline.md)) | Partial — adaptation data / eval ladder S0–S4 |
 | Trade-offs | [Build vs train vs fine-tune](https://ai-architect-interview-playbook.vercel.app/q/scalability-governance-tradeoffs/04-build-vs-train-vs-finetune-foundation-model-strategy/) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/scalability-governance-tradeoffs/04-build-vs-train-vs-finetune-foundation-model-strategy.md)) | RAG facts vs PEFT behavior (ADR-019) |
-| Cloud | [LLM gateway / model routing](https://ai-architect-interview-playbook.vercel.app/q/cloud-architecture/07-llm-gateway-semantic-cache-model-router/) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/cloud-architecture/07-llm-gateway-semantic-cache-model-router.md)) | Optional `LLM_GATEWAY_URL` → aegis-llm-gateway; promote still API-key gated |
+| Cloud | [LLM gateway / model routing](https://ai-architect-interview-playbook.vercel.app/q/cloud-architecture/07-llm-gateway-semantic-cache-model-router/) ([md](https://github.com/vpeetla-ai/ai-architect-interview-playbook/blob/main/cloud-architecture/07-llm-gateway-semantic-cache-model-router.md)) | Optional gateway enforce+record (ADR-029); promote still API-key gated |
 
 ## Stack fit
 
