@@ -13,8 +13,8 @@
 cd ui
 npm install
 npm run build
+npx vercel link --project domainforge-rag-peft-ozqr
 npx vercel --prod --yes
-npx vercel alias set <deployment>.vercel.app domainforge-rag-peft.vercel.app
 ```
 
 Set `NEXT_PUBLIC_API_URL=https://domainforge-api.onrender.com` in Vercel project env (or `ui/.env.production`).
