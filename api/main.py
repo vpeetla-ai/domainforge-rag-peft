@@ -16,6 +16,7 @@ from domainforge.eval.harness import SolutionId, load_golden_jsonl, run_eval
 from domainforge.eval.runner import compare_solutions, run_solution_on_golden
 from domainforge.generation.router import generate_triage
 from domainforge.prep.chunk_sop import chunk_all_sops
+from domainforge.query_trace import build_query_trace
 from domainforge.rag.factory import create_retriever
 from domainforge.rag.intent_router import detect_intent
 from domainforge.train.dataset import load_jsonl
@@ -87,6 +88,7 @@ class QueryResponse(BaseModel):
     triage_json: str | None = None
     inference_backend: str = "baseline"
     mock_llm: bool = True
+    trace: list[dict[str, Any]] = []
 
 
 class EvalRunRequest(BaseModel):
@@ -163,14 +165,21 @@ def query(req: QueryRequest, settings: Settings = Depends(get_settings)) -> Quer
     from domainforge.rag.naive import format_context_blocks
 
     blocks = format_context_blocks(retrieved)
+    chunk_ids = [h.chunk_id for h in retrieved]
     return QueryResponse(
         solution=req.solution.value,
         detected_intent=intent,
         context_blocks=blocks,
-        chunk_ids=[h.chunk_id for h in retrieved],
+        chunk_ids=chunk_ids,
         triage_json=triage,
         inference_backend=backend,
         mock_llm=settings.mock_llm,
+        trace=build_query_trace(
+            req.solution,
+            intent=intent,
+            chunk_count=len(chunk_ids),
+            backend=backend,
+        ),
     )
 
 

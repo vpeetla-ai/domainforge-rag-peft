@@ -77,6 +77,7 @@ flowchart TB
 | Preference pairs + win-rate | ✅ | `/v1/preferences/samples` |
 | Adapter registry + promote gate | ✅ | API-key on promote |
 | Live API + UI | ✅ | Render + Vercel |
+| Glass-box workbench UX | ✅ | Architecture rail + S0→S4 pipeline replay + product panel (`ui/components/GlassboxWorkbench.tsx`) |
 | Ollama inference | ✅ | `MOCK_LLM=false` + GPU host |
 | Ollama bench UI | ✅ | `/bench` route |
 | Golden eval CI gate | ✅ | `domainforge.triage_preference_v1` |
