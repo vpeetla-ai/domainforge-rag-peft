@@ -7,6 +7,7 @@ from domainforge.rag.naive import RetrievedChunk, format_context_blocks
 from domainforge.serve.gateway import generate_with_gateway, llm_gateway_enabled
 from domainforge.serve.ollama import generate_with_ollama, ollama_available
 from domainforge.serve.vllm import generate_with_vllm, vllm_available
+from domainforge.finops_outcomes import record_triage_outcome
 
 
 def build_user_prompt(message: str, context_blocks: list[str]) -> str:
@@ -20,12 +21,24 @@ def generate_triage(
     settings: Settings,
     retrieved: list[RetrievedChunk],
     intent_hint: str | None = None,
+    data_class: str | None = None,
 ) -> tuple[str, str]:
     """
     Returns (triage_json, backend) where backend is gateway|vllm|ollama|baseline.
+    confidential data_class forces local/private tier (ADR-029).
     """
     blocks = format_context_blocks(retrieved)
     user_prompt = build_user_prompt(message, blocks)
+    data_class = (data_class or getattr(settings, "default_data_class", "internal") or "internal").lower()
+
+    def _finish(triage: str, backend: str) -> tuple[str, str]:
+        record_triage_outcome(
+            settings=settings,
+            backend=backend,
+            ok=True,
+            data_class=data_class,
+        )
+        return triage, backend
 
     peft_solutions = (
         SolutionId.S2_HYBRID_RAG,
@@ -33,11 +46,31 @@ def generate_triage(
         SolutionId.S4_DPO_PEFT,
     )
 
-    # Federated LLM plane (ADR-028) — optional; falls through on failure.
+    # ADR-029: confidential → private tier first (ollama/vllm), never prefer cloud.
+    if (
+        not settings.mock_llm
+        and data_class == "confidential"
+        and solution in peft_solutions
+        and ollama_available(settings.ollama_base_url)
+    ):
+        try:
+            if solution == SolutionId.S4_DPO_PEFT:
+                model = settings.ollama_dpo_adapter_model
+            elif solution == SolutionId.S3_PEFT_HYBRID:
+                model = settings.ollama_adapter_model
+            else:
+                model = settings.ollama_model
+            triage = generate_with_ollama(user_prompt, settings.ollama_base_url, model)
+            return _finish(triage, "ollama")
+        except Exception:
+            pass
+
+    # Federated LLM plane (ADR-028/029) — optional; falls through on failure.
     if (
         not settings.mock_llm
         and solution in peft_solutions
         and llm_gateway_enabled(settings.llm_gateway_url)
+        and data_class != "confidential"  # confidential stays private-only
     ):
         try:
             if solution == SolutionId.S4_DPO_PEFT:
@@ -50,8 +83,13 @@ def generate_triage(
                 model,
                 api_key=settings.llm_gateway_api_key,
                 tenant_id=settings.llm_gateway_tenant_id,
+                agent_role="generator",
+                thesis_role="executor",
+                data_class=data_class,
+                selected_provider="stub",
+                model_tier="specialized",
             )
-            return triage, "gateway"
+            return _finish(triage, "gateway")
         except Exception:
             pass
 
@@ -70,7 +108,7 @@ def generate_triage(
             else:
                 model = settings.vllm_adapter_model
             triage = generate_with_vllm(user_prompt, settings.vllm_base_url, model)
-            return triage, "vllm"
+            return _finish(triage, "vllm")
         except Exception:
             pass
 
@@ -87,7 +125,7 @@ def generate_triage(
             else:
                 model = settings.ollama_model
             triage = generate_with_ollama(user_prompt, settings.ollama_base_url, model)
-            return triage, "ollama"
+            return _finish(triage, "ollama")
         except Exception:
             pass
 
@@ -98,4 +136,4 @@ def generate_triage(
         retrieved=retrieved,
         gold_intent=intent_hint,
     )
-    return triage, "baseline"
+    return _finish(triage, "baseline")

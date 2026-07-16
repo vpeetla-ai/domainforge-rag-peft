@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     llm_gateway_url: str = ""  # e.g. http://127.0.0.1:8100/v1
     llm_gateway_api_key: str = ""
     llm_gateway_tenant_id: str = "domainforge-rag-peft"
+
+    # ADR-029 outcome KPI (optional)
+    agentfinops_url: str = ""
+    agentfinops_api_key: str = ""
+    # public | internal | restricted | confidential — confidential forces private tier
+    default_data_class: str = "internal"
     preferences_dir: Path = Path("data/preferences")
     adapter_registry_path: Path = Path("adapters/registry.json")
     cors_origins: str = "http://localhost:3000,https://domainforge-rag-peft.vercel.app"
