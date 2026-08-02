@@ -50,6 +50,30 @@ def test_ops_metrics_shows_llm_gateway():
     client = TestClient(app)
     resp = client.get("/v1/ops/metrics")
     assert resp.status_code == 200
-    gw = resp.json()["extra"]["llm_gateway"]
+    extra = resp.json()["extra"]
+    gw = extra["llm_gateway"]
     assert gw["plane"] == "aegis-llm-gateway"
     assert "enabled" in gw
+    assert "finops" in extra
+    assert extra["ladder"]["solutions"] == ["S0", "S1", "S2", "S3", "S4"]
+
+
+def test_observability_status_lists_exporters():
+    client = TestClient(app)
+    resp = client.get("/v1/observability/status")
+    assert resp.status_code == 200
+    body = resp.json()
+    names = {e["name"] for e in body["exporters"]}
+    assert names == {"LLMGateway", "AgentFinOps", "vLLMLab"}
+    assert "mock_llm" in body["planes"]
+
+
+def test_health_exposes_compose_planes():
+    client = TestClient(app)
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "ok"
+    assert "mock_llm" in body
+    assert "llm_gateway_configured" in body
+    assert "finops_configured" in body

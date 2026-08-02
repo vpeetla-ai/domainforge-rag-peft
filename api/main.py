@@ -114,8 +114,53 @@ class PromoteRequest(BaseModel):
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok", "version": __version__}
+def health(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
+    gateway_on = bool((settings.llm_gateway_url or "").strip())
+    return {
+        "status": "ok",
+        "version": __version__,
+        "mock_llm": settings.mock_llm,
+        "retriever_mode": settings.retriever_mode,
+        "llm_gateway_configured": gateway_on,
+        "vllm_configured": bool((settings.vllm_base_url or "").strip()),
+        "finops_configured": bool((settings.agentfinops_url or "").strip()),
+        "api_key_gated_promote": bool((settings.domainforge_api_key or "").strip()),
+    }
+
+
+@app.get("/v1/observability/status")
+def observability_status(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
+    gateway_on = bool((settings.llm_gateway_url or "").strip())
+    vllm_on = bool((settings.vllm_base_url or "").strip())
+    finops_on = bool((settings.agentfinops_url or "").strip())
+    return {
+        "source_of_truth": "DomainForge adapter registry + corpus metrics (/v1/ops/metrics)",
+        "exporters": [
+            {
+                "name": "LLMGateway",
+                "state": "configured" if gateway_on else "unset",
+                "detail": "Optional aegis-llm-gateway enforce+record before local cascade",
+            },
+            {
+                "name": "AgentFinOps",
+                "state": "configured" if finops_on else "unset",
+                "detail": "Optional ADR-029 outcome KPI when AGENTFINOPS_URL set",
+            },
+            {
+                "name": "vLLMLab",
+                "state": "configured" if vllm_on else "unset",
+                "detail": "Educational Path B via VLLM_BASE_URL (not CUDA multi-LoRA)",
+            },
+        ],
+        "planes": {
+            "mock_llm": settings.mock_llm,
+            "retriever_mode": settings.retriever_mode,
+            "llm_gateway": {"configured": gateway_on, "plane": "aegis-llm-gateway"},
+            "finops": {"configured": finops_on, "plane": "agent-finops"},
+            "vllm": {"configured": vllm_on},
+        },
+        "recommendation": "Keep mock_llm labeled on free-tier demos; enable gateway/FinOps for panel receipts.",
+    }
 
 
 @app.get("/v1/adapters")
@@ -259,12 +304,29 @@ def ops_metrics(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
     pref_train = settings.preferences_dir / "train.jsonl"
     pairs = len(load_jsonl(pref_train)) if pref_train.exists() else 0
     gateway_on = bool((settings.llm_gateway_url or "").strip())
+    vllm_on = bool((settings.vllm_base_url or "").strip())
+    finops_on = bool((settings.agentfinops_url or "").strip())
     extra = dict(corpus)
     extra["llm_gateway"] = {
         "enabled": gateway_on,
         "url_configured": gateway_on,
         "tenant_id": settings.llm_gateway_tenant_id if gateway_on else None,
         "plane": "aegis-llm-gateway",
+    }
+    extra["finops"] = {
+        "configured": finops_on,
+        "plane": "agent-finops",
+        "note": "Optional outcome KPI; DomainForge does not invent cost charts",
+    }
+    extra["vllm"] = {
+        "configured": vllm_on,
+        "adapter_model": settings.vllm_adapter_model if vllm_on else None,
+        "path": "educational_b",
+    }
+    extra["ladder"] = {
+        "solutions": ["S0", "S1", "S2", "S3", "S4"],
+        "mock_llm_default": settings.mock_llm,
+        "promote_api_key_gated": bool((settings.domainforge_api_key or "").strip()),
     }
     return {
         "service": "domainforge-rag-peft",

@@ -84,6 +84,7 @@ flowchart TB
 | Full Mistral QLoRA on GPU | 🟡 | `scripts/gpu_pipeline.sh` — user RunPod |
 | vLLM Path B (educational, shipped) | ✅ | OpenAI-compatible `/v1/chat/completions` via `VLLM_BASE_URL` → [vLLM Lab](https://github.com/vpeetla-ai/vllm-architecture-lab); not CUDA multi-LoRA ([ADR-022](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-022-domainforge-vllm-multi-lora-serving.md)) |
 | LLM gateway plane | ✅ | When `LLM_GATEWAY_URL` set — DomainForge **selects** cascade; [aegis-llm-gateway](https://github.com/vpeetla-ai/aegis-llm-gateway) **enforces+records** (ADR-028/029) before vLLM/Ollama/baseline |
+| Ops observability planes | ✅ | `/v1/ops/metrics` + `/v1/observability/status` expose gateway / FinOps / vLLM / S0–S4 ladder honesty |
 
 ## Quick start
 
