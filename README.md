@@ -20,15 +20,17 @@ git clone https://github.com/vpeetla-ai/vpeetla-ai-skills.git
 [![API](https://img.shields.io/badge/API-Render-46E3B7)](https://domainforge-api.onrender.com/health)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Fine-tune behavior, retrieve facts** — QLoRA SFT + DPO alignment for strict JSON triage over a capstone SOP corpus, with a unified **S0→S4** eval harness.
+I’d fine-tune the *behavior*, not the facts. DomainForge is the Teaching-drawer lab for that split: RAG cites the SOP, PEFT keeps the JSON triage schema honest, and an **S0→S4** ladder proves which layer actually helped.
 
 [▶ Live demo](https://domainforge-rag-peft.vercel.app) · [API health](https://domainforge-api.onrender.com/health) · [Local AI bench](/bench) · [Case study](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/case-studies/domainforge-rag-peft.md)
+
+**Not the hire hero.** Panel path stays 5-spine; this repo lives in the Teaching drawer on [venkat-ai.com/work](https://venkat-ai.com/work).
 
 **Portfolio:** [Case study](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/case-studies/domainforge-rag-peft.md) · [ADR-019 RAG vs PEFT](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-019-rag-facts-peft-behavior.md) · [ADR-022 vLLM Path B (educational, shipped)](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-022-domainforge-vllm-multi-lora-serving.md)
 
 ## What this is
 
-**DomainForge** is the org's **RAG + MLOps adaptation layer** for customer-support triage: grounded citations from SOPs plus reliable JSON routing schemas — without fine-tuning stale policies into the model weights.
+Support triage where citations come from SOPs and the model still emits strict JSON — without baking stale policy into weights.
 
 | Layer | Repo | Live |
 |-------|------|------|
@@ -37,14 +39,14 @@ git clone https://github.com/vpeetla-ai/vpeetla-ai-skills.git
 | Inference education | [vllm-architecture-lab](https://github.com/vpeetla-ai/vllm-architecture-lab) | [vllm-architecture-lab.vercel.app](https://vllm-architecture-lab.vercel.app) |
 | Voice consumer | [voiceforge-assistant](https://github.com/vpeetla-ai/voiceforge-assistant) | [voiceforge-assistant.vercel.app](https://voiceforge-assistant.vercel.app) |
 
-## How we solve it
+## What I’d refuse
 
-| Problem | Approach |
-|---------|----------|
-| Base models invent `chunk_id`s | **RAG plane** — hybrid retrieval over capstone SOP corpus |
-| RAG-only models break JSON schema | **PEFT plane** — QLoRA SFT + DPO on Bitext labels |
-| Can't prove which layer helps | **S0→S4 eval ladder** — compare solutions on golden set |
-| Irreversible adapter promotion | API-key gated `promote`; blocked on regression |
+| Failure mode | What we do instead |
+|--------------|--------------------|
+| Base models invent `chunk_id`s | **RAG plane** — hybrid retrieval over the SOP corpus |
+| RAG-only models break JSON | **PEFT plane** — QLoRA SFT + DPO on Bitext labels |
+| “Trust me, the adapter helped” | **S0→S4 eval ladder** on a golden set |
+| Quiet adapter promotion | API-key gated `promote`; blocked on regression |
 
 **Separation:** RAG = facts · PEFT = schema / intent / action codes ([ADR-001](docs/adr/ADR-001-rag-vs-peft-separation.md) · [ADR-019](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-019-rag-facts-peft-behavior.md))
 
@@ -63,10 +65,13 @@ flowchart TB
   MSG["Customer message"] --> API["FastAPI /v1/query"]
   HYBRID --> API
   REG -.-> API
-  REG -.->|"VLLM_BASE_URL"| VLLM["vLLM Lab Path B<br/>educational"]
+  REG -.->|"VLLM_BASE_URL"| VLLM["vLLM Lab Path B<br/>educational — not CUDA"]
   VLLM -.-> API
   API --> EVAL["Golden eval S0→S4"]
+  API --> ST["GET /v1/observability/status"]
 ```
+
+I’d open `/v1/observability/status` before claiming Path B is “production multi-LoRA.” It’s educational; CUDA multi-LoRA stays upstream.
 
 ## Honest status
 
