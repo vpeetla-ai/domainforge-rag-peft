@@ -72,6 +72,17 @@ pipeline-smoke:
 pipeline-gpu:
 	bash scripts/gpu_pipeline.sh --skip-ollama-create
 
+# After GPU train + eval JSON exist, export ModelForge receipt:
+#   make export-modelforge-receipt S0=... S3=... S4=... OUT=../modelforge-llmops/docs/receipts/peft_gpu.json
+export-modelforge-receipt:
+	python scripts/export_modelforge_receipt.py \
+		--s0 "$(S0)" --s3 "$(S3)" --s4 "$(S4)" \
+		--adapter-uri "$(ADAPTER_URI)" \
+		--sft-examples "$(SFT_EXAMPLES)" \
+		--dpo-pairs "$(DPO_PAIRS)" \
+		--gpu "$(GPU)" \
+		--out "$(OUT)"
+
 api:
 	uvicorn api.main:app --reload --port 8090
 
