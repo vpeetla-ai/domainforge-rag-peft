@@ -49,8 +49,6 @@ def main() -> None:
     s4 = json.loads(args.s4.read_text())
 
     receipt = {
-        "status": "gpu",
-        "honesty": "CUDA PEFT receipt — requires operator GPU run; not peft_smoke.",
         "run_id": f"peft-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
         "base_model": args.base_model,
         "gpu": args.gpu,
