@@ -5,7 +5,11 @@ import { usePathname } from 'next/navigation';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const activeNav = pathname?.startsWith('/bench') ? 'bench' : 'triage';
+  const activeNav = pathname?.startsWith('/bench')
+    ? 'bench'
+    : pathname?.startsWith('/taxonomy')
+      ? 'taxonomy'
+      : 'triage';
 
   return (
     <>
@@ -24,6 +28,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
             <Link href="/bench" className={activeNav === 'bench' ? 'is-active' : undefined}>
               Local AI bench
+            </Link>
+            <Link href="/taxonomy" className={activeNav === 'taxonomy' ? 'is-active' : undefined}>
+              Taxonomy
             </Link>
           </nav>
           <div className="header-actions">
