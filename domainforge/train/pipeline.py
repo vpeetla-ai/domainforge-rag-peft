@@ -98,6 +98,20 @@ def run_gpu_pipeline(
         force_cpu=force_cpu,
     )
 
+    if device == "cuda":
+        # SFT's model/optimizer/gradients stay cached on the GPU after
+        # train_qlora() returns -- PyTorch's caching allocator doesn't hand
+        # memory back to the driver just because Python's refcount hit zero.
+        # Without this, DPO's fresh model load can OOM even when there's
+        # nominally enough free VRAM, because the freed SFT blocks are
+        # fragmented rather than one contiguous region.
+        import gc
+
+        import torch
+
+        gc.collect()
+        torch.cuda.empty_cache()
+
     dpo_result = train_dpo(
         prefs_train,
         prefs_val,
