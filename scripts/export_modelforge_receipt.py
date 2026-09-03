@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
-"""Export a ModelForge-compatible PEFT receipt from DomainForge eval outputs.
+"""Export a ModelForge-compatible PEFT receipt from DomainForge training manifests.
 
-Usage (from domainforge-rag-peft root, after GPU pipeline + eval-compare):
+Usage (from domainforge-rag-peft root, after scripts/gpu_pipeline.sh):
 
   python scripts/export_modelforge_receipt.py \\
-    --s0 data/eval/results/s0_baseline.json \\
-    --s3 data/eval/results/s3_peft_hybrid.json \\
-    --s4 data/eval/results/s4_dpo_peft.json \\
-    --adapter-uri adapters/s4-dpo \\
+    --sft-manifest adapters/domainforge-triage-v0/training_manifest.json \\
+    --dpo-manifest adapters/domainforge-triage-dpo-v0/training_manifest.json \\
+    --adapter-uri adapters/domainforge-triage-dpo-v0 \\
     --require-cuda \\
     --out /path/to/modelforge-llmops/docs/receipts/peft_gpu.json
 
 Honesty:
   Writing peft_gpu.json requires --require-cuda (live CUDA) or --allow-unverified (tests only).
   Tiny smoke bases (e.g. sshleifer/tiny-gpt2) are rejected for peft_gpu unless --allow-unverified.
+
+  This receipt reports ONLY what train_qlora()/train_dpo() actually measured: real example/pair
+  counts, real step counts, real wall-clock seconds, pulled straight from the training_manifest.json
+  each stage writes. It deliberately does NOT include a quality/win-rate score for the trained
+  adapter: domainforge/generation/baseline.py's generate_triage_json() — the function every S0-S4
+  eval "solution" runs through, including S3/S4 — is a template/keyword simulator, not real PEFT
+  adapter inference (see its own docstring). Scoring S3/S4 against the golden set today would
+  silently re-run that simulator and produce numbers unrelated to whatever adapter was just trained,
+  which is worse than reporting no quality number at all. Wiring real adapter inference into that
+  eval path is tracked as a known gap (see the "known_gaps" field below), not faked here.
 """
 
 from __future__ import annotations
@@ -27,23 +36,12 @@ from typing import Any
 
 TINY_MARKERS = ("tiny-gpt2", "sshleifer/tiny", "hf-internal-testing")
 
-
-def _metric(blob: dict[str, Any], *keys: str, default: float = 0.0) -> float:
-    # Also accept *_pct variants from DomainForge eval JSON.
-    expanded: list[str] = []
-    for k in keys:
-        expanded.append(k)
-        if not k.endswith("_pct"):
-            expanded.append(f"{k}_pct")
-    for k in expanded:
-        if k in blob and isinstance(blob[k], (int, float)):
-            val = float(blob[k])
-            return val / 100.0 if k.endswith("_pct") and val > 1.0 else val
-        summary = blob.get("summary") or blob.get("metrics") or {}
-        if isinstance(summary, dict) and k in summary:
-            val = float(summary[k])
-            return val / 100.0 if k.endswith("_pct") and val > 1.0 else val
-    return default
+KNOWN_GAPS = [
+    "domainforge/generation/baseline.py:generate_triage_json() is a template/keyword simulator "
+    "for S3 (PEFT/SFT) and S4 (DPO), not live inference through the trained adapter — see its "
+    "docstring. This receipt therefore reports real training config/timing only; it does not "
+    "claim a quality or preference-win-rate score for this adapter's generations.",
+]
 
 
 def _cuda_proof(require: bool) -> dict[str, Any]:
@@ -62,14 +60,11 @@ def _cuda_proof(require: bool) -> dict[str, Any]:
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("--s0", type=Path, required=True)
-    p.add_argument("--s3", type=Path, required=True)
-    p.add_argument("--s4", type=Path, required=True)
+    p.add_argument("--sft-manifest", type=Path, required=True, help="adapters/<sft>/training_manifest.json")
+    p.add_argument("--dpo-manifest", type=Path, required=True, help="adapters/<dpo>/training_manifest.json")
     p.add_argument("--base-model", default="mistralai/Mistral-7B-Instruct-v0.3")
     p.add_argument("--gpu", default="1x CUDA (operator-reported)")
     p.add_argument("--adapter-uri", default="")
-    p.add_argument("--sft-examples", type=int, default=0)
-    p.add_argument("--dpo-pairs", type=int, default=0)
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--require-cuda", action="store_true")
     p.add_argument(
@@ -99,33 +94,42 @@ def main() -> None:
         except (FileNotFoundError, subprocess.CalledProcessError):
             smi = ""
 
-    s0 = json.loads(args.s0.read_text())
-    s3 = json.loads(args.s3.read_text())
-    s4 = json.loads(args.s4.read_text())
+    sft_manifest = json.loads(args.sft_manifest.read_text())
+    dpo_manifest = json.loads(args.dpo_manifest.read_text())
 
     receipt = {
         "status": "gpu",
         "cuda": bool(proof["cuda"]) if args.require_cuda else False,
-        "honesty": "CUDA PEFT receipt — requires operator GPU run; not peft_smoke.",
+        "honesty": (
+            "CUDA PEFT+DPO training receipt — requires operator GPU run; not peft_smoke. "
+            "Reports real training config/timing only; see known_gaps for what is NOT claimed."
+        ),
         "run_id": f"peft-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
         "base_model": args.base_model,
         "gpu": args.gpu,
         "cuda_device": proof.get("cuda_device"),
-        "sft_examples": args.sft_examples,
-        "dpo_pairs": args.dpo_pairs,
-        "metrics": {
-            "S0_schema_pass": _metric(s0, "schema_pass", "format_adherence", "json_valid_rate"),
-            "S3_schema_pass": _metric(s3, "schema_pass", "format_adherence", "json_valid_rate"),
-            "S4_schema_pass": _metric(s4, "schema_pass", "format_adherence", "json_valid_rate"),
-            "S4_preference_win_rate": _metric(s4, "preference_win_rate", "win_rate", "dpo_win_rate"),
+        "sft": {
+            "train_examples": sft_manifest.get("train_samples", sft_manifest.get("train_examples")),
+            "val_examples": sft_manifest.get("val_samples", sft_manifest.get("val_examples")),
+            "max_steps": sft_manifest.get("max_steps"),
+            "wall_seconds": sft_manifest.get("wall_seconds"),
+            "use_qlora": sft_manifest.get("use_qlora"),
+        },
+        "dpo": {
+            "train_pairs": dpo_manifest.get("train_pairs"),
+            "val_pairs": dpo_manifest.get("val_pairs"),
+            "max_steps": dpo_manifest.get("max_steps"),
+            "wall_seconds": dpo_manifest.get("wall_seconds"),
+            "beta": dpo_manifest.get("beta"),
+            "adapter_path": dpo_manifest.get("adapter_path"),
         },
         "adapter_uri": args.adapter_uri,
         "nvidia_smi_excerpt": smi,
+        "known_gaps": list(KNOWN_GAPS),
         "notes": "RAG still owns facts; PEFT owns schema/behavior (ADR-019/020). Generated by DomainForge export_modelforge_receipt.py.",
         "sources": {
-            "s0": str(args.s0),
-            "s3": str(args.s3),
-            "s4": str(args.s4),
+            "sft_manifest": str(args.sft_manifest),
+            "dpo_manifest": str(args.dpo_manifest),
         },
     }
     if args.allow_unverified and not args.require_cuda:

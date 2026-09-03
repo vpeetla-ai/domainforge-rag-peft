@@ -11,27 +11,33 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_export_modelforge_receipt_unverified(tmp_path):
-    s0 = tmp_path / "s0.json"
-    s3 = tmp_path / "s3.json"
-    s4 = tmp_path / "s4.json"
-    for path, rate in [(s0, 0.4), (s3, 0.7), (s4, 0.85)]:
-        path.write_text(json.dumps({"schema_pass": rate, "preference_win_rate": 0.62}))
+    sft_manifest = tmp_path / "sft_manifest.json"
+    dpo_manifest = tmp_path / "dpo_manifest.json"
+    sft_manifest.write_text(
+        json.dumps({"train_samples": 378, "val_samples": 27, "max_steps": 200, "wall_seconds": 827.42, "use_qlora": True})
+    )
+    dpo_manifest.write_text(
+        json.dumps(
+            {
+                "train_pairs": 16,
+                "val_pairs": 3,
+                "max_steps": 100,
+                "wall_seconds": 1021.94,
+                "beta": 0.1,
+                "adapter_path": "adapters/domainforge-triage-v0",
+            }
+        )
+    )
     out = tmp_path / "peft_gpu.json"
     cmd = [
         sys.executable,
         str(ROOT / "scripts" / "export_modelforge_receipt.py"),
-        "--s0",
-        str(s0),
-        "--s3",
-        str(s3),
-        "--s4",
-        str(s4),
+        "--sft-manifest",
+        str(sft_manifest),
+        "--dpo-manifest",
+        str(dpo_manifest),
         "--gpu",
         "1x A100-40GB",
-        "--sft-examples",
-        "128",
-        "--dpo-pairs",
-        "64",
         "--adapter-uri",
         "adapters/s4-dpo",
         "--allow-unverified",
@@ -42,26 +48,26 @@ def test_export_modelforge_receipt_unverified(tmp_path):
     blob = json.loads(out.read_text())
     assert blob["status"] == "unverified"
     assert blob["cuda"] is False
-    assert blob["metrics"]["S0_schema_pass"] == 0.4
-    assert blob["metrics"]["S4_schema_pass"] == 0.85
+    assert blob["sft"]["train_examples"] == 378
+    assert blob["sft"]["max_steps"] == 200
+    assert blob["dpo"]["train_pairs"] == 16
+    assert blob["dpo"]["max_steps"] == 100
+    assert "known_gaps" in blob and blob["known_gaps"]
 
 
 def test_export_peft_gpu_requires_cuda_flag(tmp_path):
-    s0 = tmp_path / "s0.json"
-    s3 = tmp_path / "s3.json"
-    s4 = tmp_path / "s4.json"
-    for path in (s0, s3, s4):
-        path.write_text(json.dumps({"schema_pass": 0.5}))
+    sft_manifest = tmp_path / "sft_manifest.json"
+    dpo_manifest = tmp_path / "dpo_manifest.json"
+    sft_manifest.write_text(json.dumps({"train_samples": 10, "max_steps": 5, "wall_seconds": 1.0}))
+    dpo_manifest.write_text(json.dumps({"train_pairs": 2, "max_steps": 2, "wall_seconds": 1.0}))
     out = tmp_path / "peft_gpu.json"
     cmd = [
         sys.executable,
         str(ROOT / "scripts" / "export_modelforge_receipt.py"),
-        "--s0",
-        str(s0),
-        "--s3",
-        str(s3),
-        "--s4",
-        str(s4),
+        "--sft-manifest",
+        str(sft_manifest),
+        "--dpo-manifest",
+        str(dpo_manifest),
         "--out",
         str(out),
     ]
