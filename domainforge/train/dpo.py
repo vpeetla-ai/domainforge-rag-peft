@@ -86,10 +86,32 @@ def train_dpo(
     train_dataset = Dataset.from_list(train_rows)
     val_dataset = Dataset.from_list(val_rows) if val_rows else None
 
-    model_kwargs: dict[str, Any] = {"trust_remote_code": True, "torch_dtype": torch.float32}
+    # Real GPU run: this loaded Mistral-7B in fp32 (~28GB of weights alone,
+    # vs SFT's 4-bit QLoRA at ~4GB) with no quantization at all, and OOM'd a
+    # 22GB L4 loading the model -- before DPOTrainer had allocated anything
+    # of its own. SFT (domainforge/train/qlora.py) already does this
+    # correctly; mirror it here rather than reloading full precision.
+    use_quant = device == "cuda"
+    model_kwargs: dict[str, Any] = {"trust_remote_code": True}
+    if use_quant:
+        from transformers import BitsAndBytesConfig
+
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+        )
+        model_kwargs["device_map"] = "auto"
+    else:
+        model_kwargs["torch_dtype"] = torch.float32
     model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
-    if device == "cpu":
+    if not use_quant and device == "cpu":
         model = model.to("cpu")
+    if use_quant:
+        from peft import prepare_model_for_kbit_training
+
+        model = prepare_model_for_kbit_training(model)
 
     lora_targets = list(cfg.get("target_modules", ["q_proj", "v_proj"]))
     if "gpt2" in model_id.lower() or "tiny" in model_id.lower():
