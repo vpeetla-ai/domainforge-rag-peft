@@ -52,7 +52,7 @@ Support triage where citations come from SOPs and the model still emits strict J
 
 ## Architecture
 
-Canonical: [`docs/diagrams/canonical-architecture.mmd`](docs/diagrams/canonical-architecture.mmd)
+Canonical: [`docs/diagrams/canonical-architecture.mmd`](docs/diagrams/canonical-architecture.mmd) · Training pipeline detail (S0–S4, real GPU training vs template-simulated eval scoring): [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
 ```mermaid
 flowchart TB
@@ -86,7 +86,7 @@ I’d open `/v1/observability/status` before claiming Path B is “production mu
 | Ollama inference | ✅ | `MOCK_LLM=false` + GPU host |
 | Ollama bench UI | ✅ | `/bench` route |
 | Golden eval CI gate | ✅ | `domainforge.triage_preference_v1` |
-| Full Mistral QLoRA on GPU | 🟡 | `scripts/gpu_pipeline.sh` — user RunPod |
+| Full Mistral QLoRA on GPU | 🟡 | `scripts/gpu_pipeline.sh` — user RunPod/self-hosted; verified end-to-end on an L4 2026-09-03 (SFT: 378 examples/200 steps/~14min, DPO: 16 pairs/100 steps/~17min continuing from SFT). Manual, not CI-gated — stays 🟡. DPO previously OOM'd on GPU from an unquantized model load; fixed same day ([`967ee36`](https://github.com/vpeetla-ai/domainforge-rag-peft/commit/967ee3685b5f598362fd37f37e664d77632827c1)). See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for what this run does and does not prove about S3/S4 quality. |
 | vLLM Path B (educational, shipped) | ✅ | OpenAI-compatible `/v1/chat/completions` via `VLLM_BASE_URL` → [vLLM Lab](https://github.com/vpeetla-ai/vllm-architecture-lab); not CUDA multi-LoRA ([ADR-022](https://github.com/vpeetla-ai/ai-architecture-portfolio/blob/main/adr/ADR-022-domainforge-vllm-multi-lora-serving.md)) |
 | LLM gateway plane | ✅ | When `LLM_GATEWAY_URL` set — DomainForge **selects** cascade; [aegis-llm-gateway](https://github.com/vpeetla-ai/aegis-llm-gateway) **enforces+records** (ADR-028/029) before vLLM/Ollama/baseline |
 | Ops observability planes | ✅ | `/v1/ops/metrics` + `/v1/observability/status` expose gateway / FinOps / vLLM / S0–S4 ladder honesty |
