@@ -73,16 +73,16 @@ that says so.
 ## Known gaps (dated, with commits)
 
 - **2026-09-03 — DPO CUDA OOM, wrong root cause fixed twice before the real one.**
-  A real run on a 22GB L4 GPU OOM'd during DPO. Two attempts didn't fix it: an explicit
-  `gc.collect()`/`torch.cuda.empty_cache()` between SFT and DPO in `pipeline.py`
-  (commit `3895bfd`), then decomposing `gpu_pipeline.sh` into separate SFT/DPO/eval OS
-  processes so DPO starts with a guaranteed-clean CUDA context (commit `c7d9eb9`). Both
-  still OOM'd at the same ~22GB mark, proving the bug lived inside `train_dpo()` itself:
-  it was loading the full Mistral-7B-Instruct-v0.3 in unquantized `torch.float32`
-  (~28GB of weights alone) with no `BitsAndBytesConfig`, no `device_map`, and no
-  `prepare_model_for_kbit_training` — none of the 4-bit QLoRA machinery `train_qlora()`
-  already applied correctly for SFT. Fixed by mirroring that same quantization path in
-  `train_dpo()`, gated on `device == "cuda"` so the CPU/`--tiny` smoke path is untouched.
+  A real run on a 22GB L4 GPU OOM'd during DPO. Two fixes didn't stick:
+  - An explicit `gc.collect()`/`torch.cuda.empty_cache()` between SFT and DPO in `pipeline.py` (commit `3895bfd`)
+  - Decomposing `gpu_pipeline.sh` into separate SFT/DPO/eval OS processes so DPO starts with a guaranteed-clean CUDA context (commit `c7d9eb9`)
+
+  Both still OOM'd at the same ~22GB mark. That pointed at the real bug: `train_dpo()`
+  was loading the full Mistral-7B-Instruct-v0.3 in unquantized `torch.float32` (~28GB of
+  weights alone) — no `BitsAndBytesConfig`, no `device_map`, no
+  `prepare_model_for_kbit_training`. None of the 4-bit QLoRA machinery `train_qlora()`
+  already applied correctly for SFT. Fix: mirror that same quantization path in
+  `train_dpo()`, gated on `device == "cuda"` so the CPU/`--tiny` smoke path stays untouched.
   [`967ee36`](https://github.com/vpeetla-ai/domainforge-rag-peft/commit/967ee3685b5f598362fd37f37e664d77632827c1)
 
 - **2026-09-03 — receipt exporter was reading 4-month-old fixture files, not real
